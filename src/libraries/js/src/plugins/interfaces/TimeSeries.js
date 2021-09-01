@@ -9,7 +9,7 @@ export class TimeSeries{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),
@@ -26,7 +26,7 @@ export class TimeSeries{
 
         this.ports = {
             style: {
-                default: 'Smoothie',
+                data: 'Smoothie',
                 options: [
                     'Smoothie',
                     // 'uPlot'
@@ -34,7 +34,7 @@ export class TimeSeries{
                 input: {type: null},
                 output: {type: null},
                 onUpdate: () => {
-                    switch (this.params.style){
+                    switch (this.ports.style.data){
                         case 'Smoothie':
                             this.props.helper = new SmoothieChartMaker(1, this.props.canvas);
                             break
@@ -58,16 +58,15 @@ export class TimeSeries{
                 edit: false,
                 input: {type: 'number'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    let u = userData[0]
+                onUpdate: (user) => {
                     let data = []
-                    switch (this.params.style){
+                    switch (this.ports.style.data){
                         case 'Smoothie':
-                            data = [u.data]
+                            data = [user.data]
                             this.props.helper.bulkAppend(data)
                             break
                         case 'uPlot':
-                            data = [Date.now(), u.data]
+                            data = [Date.now(), user.data]
                             data.forEach((val,i) => {this.props.helper.uPlotData.push(val)})
                             if (this.props.helper.plot) this.props.helper.plot.setData(this.props.helper.uPlotData);
                             break
@@ -75,18 +74,15 @@ export class TimeSeries{
                 }
             },
             element: {
-                default: this.props.canvas,
+                data: this.props.canvas,
                 input: {type: null},
-                output: {type: Element},
-                onUpdate: () => {
-                    return [{data: this.props.canvas}]
-                }
+                output: {type: Element}
             }
         }
     }
 
     init = () => {
-        this.session.graph.runSafe(this,'style', [{forceRun: true}])
+        this.session.graph.runSafe(this,'style', {forceRun: true})
     }
 
     deinit = () => {

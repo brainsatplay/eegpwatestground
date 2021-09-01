@@ -6,17 +6,20 @@ export class Buffer{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
-
-        this.paramOptions = {
-            size: {default: 500, min: 1, max: 2500, step: 1},
-        }
 
         this.ports = {
             default: {
-                input: {type: undefined},
                 output: {type: Array},
-            }
+                onUpdate: (user) => {
+                    this.props.buffer.push(user.data)
+                    if (this.props.buffer.length > this.ports.size.data) this.props.buffer.shift()
+                    user.data = this.props.buffer
+                    user.meta.label = this.label
+                    return user
+                }
+            },
+            size: {data: 500, min: 1, max: 2500, step: 1, input: {type: 'number'}, output: {type: null}},
+
         }
 
         this.props = {
@@ -31,13 +34,5 @@ export class Buffer{
 
     deinit = () => {
         this.props.looping = false
-    }
-
-    default = (userData) => {
-        this.props.buffer.push(userData[0].data)
-        if (this.props.buffer.length > this.params.size) this.props.buffer.shift()
-        userData[0].data = this.props.buffer
-        userData[0].meta.label = this.label
-        return userData
     }
 }

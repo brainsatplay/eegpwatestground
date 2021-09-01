@@ -22,15 +22,20 @@ export class eeg32Plugin {
         this.info=info;
         info.sps = 512;
         info.deviceType = 'eeg';
+        let baudrate = 115200;
 
-        if(this.mode === "freeeeg32_2") { 
+        if(this.mode.includes("optical")) {
+            baudrate = 921600;
+        }
+
+        if(this.mode.includes("freeeeg32_2")) { 
            info.eegChannelTags = [
                 {ch: 4, tag: "FP2", analyze:true},
                 {ch: 24, tag: "FP1", analyze:true},
                 {ch: 8, tag: "other", analyze:false}
             ];
         }
-        else if (this.mode === 'freeeeg32_19') {
+        else if (this.mode.includes('freeeeg32_19')) {
             info.eegChannelTags = [
                 {ch: 4,  tag: "FP2",  analyze:true},
                 {ch: 24, tag: "FP1",  analyze:true},
@@ -110,7 +115,9 @@ export class eeg32Plugin {
                 this.atlas.settings.analyzing = false;
                 this.atlas.settings.deviceConnected = false;
                 this.ondisconnect();
-            }
+            },
+            undefined,
+            baudrate
         );
        
     }

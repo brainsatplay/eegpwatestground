@@ -2,12 +2,11 @@ class UI{
 
     static id = String(Math.floor(Math.random()*1000000))
 
-    constructor(label, session, params={}) {
+    constructor(label, session) {
 
         // Generic Plugin Attributes
         this.label = label
         this.session = session
-        this.params = {}
 
         // UI Identifier
         this.props = {
@@ -17,15 +16,55 @@ class UI{
 
         // Port Definition
         this.ports = {
-            default: {
-                output: {type: null}
-            },
             left: {
-                output: {type: null}
-            },
+                output: {type: null},
+                onUpdate: (user) => {
+                let leftEye = document.getElementById(this.props.id+"-left")
+                if (leftEye){
+                        let leftOpacity = 1-(user.data? 1 : 0)
+                        if(!user.data) { 
+                            this.leftred-=0.5;    
+                            leftEye.style.background = 'rgb(255,'+this.leftred+','+this.leftred+')';
+                        } else {
+                            this.leftred = 255;
+                            document.getElementById(this.props.id+"-leftiris").style.background = 'gold';
+                        }
+                        if(this.leftred <= 50) {
+                            this.leftred = 255;
+                            leftEye.style.background = 'rgb(255,'+this.leftred+','+this.leftred+')'; 
+                            document.getElementById(this.props.id+"-leftiris").style.background = 'rgb('+(100+Math.random()*155)+','+(100+Math.random()*155)+','+(100+Math.random()*155)+')';      
+                            leftOpacity = 0;
+                        }
+                        leftEye.style.opacity = leftOpacity;
+                }
+                return user
+            }},
+        
             right: {
-                output: {type: null}
+                output: {type: null},
+                onUpdate: (user) => {
+        
+                    console.log(user)
+                let rightEye = document.getElementById(this.props.id+"-right")
+                if (rightEye){
+                        let rightOpacity = 1-(user.data? 1 : 0)
+                        if(!user.data) {
+                            this.rightred-=0.5;
+                            rightEye.style.background = 'rgb(255,'+this.rightred+','+this.rightred+')';
+                        } else {
+                            this.rightred = 255;
+                            document.getElementById(this.props.id+"-rightiris").style.background = 'gold';
+                        } 
+                        if(this.rightred <= 50){
+                            this.rightred = 255;
+                            rightEye.style.background = 'rgb(255,'+this.leftred+','+this.leftred+')';
+                            document.getElementById(this.props.id+"-rightiris").style.background = 'rgb('+(100+Math.random()*155)+','+(100+Math.random()*155)+','+(100+Math.random()*155)+')';
+                            rightOpacity = 0;
+                        }
+                        rightEye.style.opacity = rightOpacity;
             }
+                return user
+            }}
         }
 
         this.sub1 = undefined;
@@ -60,60 +99,6 @@ class UI{
         }
 
         return {HTMLtemplate, setupHTML}
-    }
-
-    left = (userData) => {
-        let leftEye = document.getElementById(this.props.id+"-left")
-        if (leftEye){
-            userData.forEach(u => {
-                let leftOpacity = 1-(u.data? 1 : 0)
-                if(!u.data) { 
-                    this.leftred-=0.5;    
-                    leftEye.style.background = 'rgb(255,'+this.leftred+','+this.leftred+')';
-                } else {
-                    this.leftred = 255;
-                    document.getElementById(this.props.id+"-leftiris").style.background = 'gold';
-                }
-                if(this.leftred <= 50) {
-                    this.leftred = 255;
-                    leftEye.style.background = 'rgb(255,'+this.leftred+','+this.leftred+')'; 
-                    document.getElementById(this.props.id+"-leftiris").style.background = 'rgb('+(100+Math.random()*155)+','+(100+Math.random()*155)+','+(100+Math.random()*155)+')';      
-                    leftOpacity = 0;
-                }
-                leftEye.style.opacity = leftOpacity;
-            })
-        }
-        return userData
-    }
-
-    right = (userData) => {
-
-        let rightEye = document.getElementById(this.props.id+"-right")
-        if (rightEye){
-            userData.forEach(u => {
-                let rightOpacity = 1-(u.data? 1 : 0)
-                if(!u.data) {
-                    this.rightred-=0.5;
-                    rightEye.style.background = 'rgb(255,'+this.rightred+','+this.rightred+')';
-                } else {
-                    this.rightred = 255;
-                    document.getElementById(this.props.id+"-rightiris").style.background = 'gold';
-                } 
-                if(this.rightred <= 50){
-                    this.rightred = 255;
-                    rightEye.style.background = 'rgb(255,'+this.leftred+','+this.leftred+')';
-                    document.getElementById(this.props.id+"-rightiris").style.background = 'rgb('+(100+Math.random()*155)+','+(100+Math.random()*155)+','+(100+Math.random()*155)+')';
-                    rightOpacity = 0;
-                }
-                rightEye.style.opacity = rightOpacity;
-            })
-    }
-        return userData
-    }
-
-    default = (userData) => {
-        // this.session.atlas.getBlink()
-        return userData
     }
 
     deinit = () => {

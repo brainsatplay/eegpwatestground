@@ -8,7 +8,7 @@ export class OSC{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
 
         // console.log(oscHelper)

@@ -34,10 +34,11 @@ export const settings = {
         {id:'manager', class: Ramchurn},
 
         // Video Player
-        {id:'video', class: brainsatplay.plugins.interfaces.Video, params: {cut: true}},
+        {id:'video', class: brainsatplay.plugins.interfaces.Video, params: {cut: true, files: [], ui: false}},
 
         // Audio
-        {id:'audio', class: brainsatplay.plugins.audio.Audio},
+        // {id:'audio', class: brainsatplay.plugins.audio.Audio},
+        {id:'mixer', class: brainsatplay.plugins.audio.Mixer},
 
         // UI
         {id:'ui', class: brainsatplay.plugins.interfaces.UI, params: {
@@ -80,14 +81,18 @@ export const settings = {
 
         // Pass Videos
         {
-          source: 'manager:video',
+          source: 'manager:controlVideo',
           target: 'video:files'
         },
 
         // Pass Audio
         {
-          source: 'manager:audio',
-          target: 'audio:files'
+          source: 'manager:setAudio',
+          target: 'mixer:files'
+        },
+        {
+          source: 'manager:controlAudio',
+          target: 'mixer:control'
         },
 
         // Data-Based Control
@@ -125,9 +130,13 @@ export const settings = {
           target: 'video:change'
         },
         {
-          source: 'manager:cut',
-          target: 'audio:track1'
+          source: 'mixer:files',
+          target: 'manager:start'
         },
+        // {
+        //   source: 'manager:cut',
+        //   target: 'audio:track1'
+        // },
       ]
     },
 

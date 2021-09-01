@@ -9,18 +9,15 @@ export class LDA{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
-
-        this.paramOptions = {
-            threshold: {default: 0.1, min: 0, max: 1, step: 0.01}
-        }
 
         this.ports = {
+            threshold: {data: 0.1, min: 0, max: 1, step: 0.01},
+
             train: {
                 input: {type: undefined},
                 output: {type: 'number'},
-                onUpdate: (userData) => {
-                    let trialsAggregated = this._preprocess(userData)
+                onUpdate: (user) => {
+                    let trialsAggregated = this._preprocess(user)
         
                         let types = Object.keys(trialsAggregated)
 
@@ -54,8 +51,8 @@ export class LDA{
                 
                         // Learn an LDA classifier
                         this.props.models.lda = this.props.bci.ldaLearn(featuresData1Training, featuresData2Training);
-                        this.session.graph.runSafe(this,'test', [{data: [partitions1[1], partitions2[1]]}])
-                    return userData
+                        this.session.graph.runSafe(this,'test', {data: [partitions1[1], partitions2[1]]})
+                    return user
                 }
             },
             test: {
@@ -63,12 +60,10 @@ export class LDA{
                 output: {type: 'number'},
 
                 // Pass correctly-formatted test data (from train...)
-                onUpdate: (userData) => {
-                    let u = userData[0]
-
+                onUpdate: (user) => {
                     // Compute testing data features
-                    let featuresFeetTesting = eegmath.transpose([this._computeTrialFeatures(this.props.models.csp, u.data[0])]);
-                    let featuresRightTesting = eegmath.transpose([this._computeTrialFeatures(this.props.models.csp, u.data[1])]);
+                    let featuresFeetTesting = eegmath.transpose([this._computeTrialFeatures(this.props.models.csp, user.data[0])]);
+                    let featuresRightTesting = eegmath.transpose([this._computeTrialFeatures(this.props.models.csp, user.data[1])]);
             
                     // Classify testing data
             
@@ -90,19 +85,17 @@ export class LDA{
                     console.log(this.props.bci.toTable(confusionMatrix));
                     console.log('balanced accuracy');
                     console.log(bac);
-                    return [{data: bac}]
+                    return {data: bac}
                 }
             },
             predict: {
                 input: {type: Array},
                 output: {type: 'int'},
-                onUpdate: (userData) => {
+                onUpdate: (user) => {
                     if (this.props.models.csp){
-                        userData.forEach((u,i) => {
-                            let features = eegmath.transpose([this._computeTrialFeatures(this.props.models.csp, u.data)]);
-                            let predictions = features.map(this._classify).filter(value => value != -1);
-                            u.data = eegmath.mode(predictions)
-                        })
+                        let features = eegmath.transpose([this._computeTrialFeatures(this.props.models.csp, user.data)]);
+                        let predictions = features.map(this._classify).filter(value => value != -1);
+                        user.data = eegmath.mode(predictions)
                     } else console.error('model not trained')
                 }
 
@@ -126,8 +119,8 @@ export class LDA{
     _classify = (feature) => {
         let projection = this.props.bci.ldaProject(this.props.models.lda, feature);
         // Filter out values between -0.5 and 0.5 as unknown classes
-        if(projection < this.params.threshold) return 0;
-        if(projection > this.params.threshold) return 1;
+        if(projection < this.ports.threshold.data) return 0;
+        if(projection > this.ports.threshold.data) return 1;
         return -1;
     }
 
@@ -152,11 +145,10 @@ export class LDA{
         return [].concat(...features);
     }
 
-    _preprocess = (userData) => {
+    _preprocess = (user) => {
         let trialsAggregated = {}
 
         // Get Trials for Each User
-        userData.forEach((u,i) => {
 
             // Get Trial Information
             let getTrialInfo = (data) => {
@@ -179,7 +171,7 @@ export class LDA{
                 return trials
             }
 
-            let trials = getTrialInfo(u.data.data)
+            let trials = getTrialInfo(user.data.data)
 
             // Aggregate Trial Label + All Channel Data Together
             let extractTrialsFromData = (data, time, trialInfo) => {
@@ -188,9 +180,9 @@ export class LDA{
                 })
             }
 
-            for (let key in u.data.data){
+            for (let key in user.data.data){
                 if (key.includes('_signal')){
-                    let trialData = extractTrialsFromData(u.data.data[key], u.data.data.times, trials)
+                    let trialData = extractTrialsFromData(user.data.data[key], user.data.data.times, trials)
                     trialData.forEach((o,i) => {
                         if (o.label != ''){ // Remove empty labels
                             if (trialsAggregated[o.label] == null) trialsAggregated[o.label] = {data: [], time: [], dataLabels: []}
@@ -206,7 +198,6 @@ export class LDA{
                     })
                 }
             }
-        })
         return trialsAggregated
     }
 }

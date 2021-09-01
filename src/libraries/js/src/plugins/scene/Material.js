@@ -10,7 +10,7 @@ export class Material{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),
@@ -26,37 +26,37 @@ export class Material{
         this.ports = {
             default: {
                 edit: false,
-                default: this.props.material,
+                data: this.props.material,
                 input: {type: null},
                 output: {type: Object, name: 'Material'},
                 onUpdate: () => {
-                    switch(this.params.type){
+                    switch(this.ports.type.data){
                         case 'MeshStandardMaterial':
-                            this.props.material = new THREE.MeshStandardMaterial( {color: this.params.color} );
+                            this.props.material = new THREE.MeshStandardMaterial( {color: this.ports.color.data} );
                             break
                         case 'ShaderMaterial':
 
                             this._replaceUniformsWithThreeObjects(this.props.uniforms) // Conduct on original object
 
                             this.props.material = new THREE.ShaderMaterial({
-                                vertexShader: this.params.vertexShader,
-                                fragmentShader: this.params.fragmentShader,
+                                vertexShader: this.ports.vertexShader.data,
+                                fragmentShader: this.ports.fragmentShader.data,
                                 uniforms: this.props.uniforms
                             });
                             break
                     }
             
                     this.props.material.side = THREE.DoubleSide
-                    this.props.material.transparent = this.params.transparent
-                    this.props.material.wireframe = this.params.wireframe
-                    this.props.material.depthWrite = this.params.depthWrite
-                    this.props.material.alphaTest = this.params.alphaTest
+                    this.props.material.transparent = this.ports.transparent.data
+                    this.props.material.wireframe = this.ports.wireframe.data
+                    this.props.material.depthWrite = this.ports.depthWrite.data
+                    this.props.material.alphaTest = this.ports.alphaTest.data
             
-                    return [{data: this.props.material}]
+                    return {data: this.props.material}
                 }
             },
             type: {
-                default: 'MeshStandardMaterial', 
+                data: 'MeshStandardMaterial', 
                 options: [
                     'MeshStandardMaterial',
                     'ShaderMaterial'
@@ -65,39 +65,39 @@ export class Material{
                 output: {type: null}
             },
             fragmentShader: {
-                default: blankFragment,
+                data: blankFragment,
                 input: {type: 'GLSL'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    this.params.fragmentShader = userData[0].data
-                    this._updateUniforms(userData[0].meta.uniforms)
+                onUpdate: (user) => {
+                    this.ports.fragmentShader.data = user.data
+                    this._updateUniforms(user.meta.uniforms)
                     this._passShaderMaterial()
                 }
             },
             vertexShader: {
-                default: vertexShader,
+                data: vertexShader,
                 input: {type: 'GLSL'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                        this.params.vertexShader = userData[0].data
-                        this._updateUniforms(userData[0].meta.uniforms)
+                onUpdate: (user) => {
+                        this.ports.vertexShader.data = user.data
+                        this._updateUniforms(user.meta.uniforms)
                         this._passShaderMaterial()
                 }
             },
-            color: {default: this.props.defaultColor, input: {type: 'color'}, output: {type: null}},
-            transparent: {default: false, input: {type: 'boolean'}, output: {type: null}},
-            wireframe: {default: false, input: {type: 'boolean'}, output: {type: null}},
-            depthWrite: {default: false, input: {type: 'boolean'}, output: {type: null}},
-            alphaTest: {default: 0, min: 0, max: 1, step: 0.01, input: {type: 'number'}, output: {type: null}},
+            color: {data: this.props.defaultColor, input: {type: 'color'}, output: {type: null}},
+            transparent: {data: false, input: {type: 'boolean'}, output: {type: null}},
+            wireframe: {data: false, input: {type: 'boolean'}, output: {type: null}},
+            depthWrite: {data: false, input: {type: 'boolean'}, output: {type: null}},
+            alphaTest: {data: 0, min: 0, max: 1, step: 0.01, input: {type: 'number'}, output: {type: null}},
         }
     }
 
     init = () => {
 
         // Subscribe to Changes in Parameters
-        this.props.state.addToState('params', this.params, () => {
+        this.props.state.addToState('params', this.ports, () => {
                 this.props.lastRendered = Date.now()
-                this.session.graph.runSafe(this,'default',[{forceRun: true, forceUpdate: true}])
+                this.session.graph.runSafe(this,'default',{forceRun: true, forceUpdate: true})
         })
         
         this._passShaderMaterial()
@@ -143,11 +143,11 @@ export class Material{
     }
 
     _passShaderMaterial = () => {
-        if (this.params.vertexShader && this.params.fragmentShader) {
-            this.params.type = 'ShaderMaterial'
-            this.session.graph.runSafe(this,'default',[{forceRun: true, forceUpdate: true}])
+        if (this.ports.vertexShader.data && this.ports.fragmentShader.data) {
+            this.ports.type.data = 'ShaderMaterial'
+            this.session.graph.runSafe(this,'default',{forceRun: true, forceUpdate: true})
         }
-        else this.params.type = 'MeshStandardMaterial'
+        else this.ports.type.data = 'MeshStandardMaterial'
     }
 
     _hexToRgb = (hex) => {

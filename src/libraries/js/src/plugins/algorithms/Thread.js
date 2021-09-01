@@ -7,7 +7,7 @@ export class Thread{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             id: String(Math.floor(Math.random()*1000000)),
@@ -24,20 +24,20 @@ export class Thread{
             default: {
                 input: {type: undefined},
                 output: {type: undefined},
-                onUpdate: (userData) => {
-                    if (userData[0].meta.source != this.label){
-                        this._postData(userData[0].data)
+                onUpdate: (user) => {
+                    if (user.meta.source != this.label){
+                        this._postData(user.data)
                     } else {
-                        return userData
+                        return user
                     }
                 }
             },
             function: {
-                default: (data)=>{return data + 1},
+                data: (data)=>{return data + 1},
                 input: {type: Function},
                 output: {type: null},
                 onUpdate: () => {
-                    this._postToWorker({foo:'addfunc', input:['myfunction', this.params.function], origin:this.props.id})
+                    this._postToWorker({foo:'addfunc', input:['myfunction', this.ports.function.data], origin:this.props.id})
                 }
             }
         }
@@ -47,7 +47,7 @@ export class Thread{
         if(!window.workers.workerResponses) { window.workers.workerResponses = []; } //placeholder till we can get webworkers working outside of the index.html
 		this.props.workerId = window.workers.addWorker(); // add a worker for this DataAtlas analyzer instance
         window.workers.workerResponses.push(this._onMessage);
-        this.session.graph.runSafe(this, 'function', [{forceRun: true}])
+        this.session.graph.runSafe(this, 'function', {forceRun: true})
     }
 
     deinit = () => {
@@ -56,7 +56,7 @@ export class Thread{
 
     _onMessage = (msg) => {
         if (msg.origin === this.props.id){
-            this.session.graph.runSafe(this, 'default', [{data: msg.output}])
+            this.session.graph.runSafe(this, 'default', {data: msg.output})
             this.props.workerWaiting = false;
         }
     }

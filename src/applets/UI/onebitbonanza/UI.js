@@ -20,7 +20,6 @@ class UI{
         // Generic Plugin Attributes
         this.label = label
         this.session = session
-        this.params = {}
 
         // UI Identifier
         this.props = {
@@ -34,17 +33,9 @@ class UI{
 
         // Port Definition
         this.ports = {
-            default: {
-                defaults: {
-                    input: [{username: 'Username', data: 'Value', meta: {label: 'Waiting for Data'}}]
-                }
-            }
-        }
-
-        // Operator Configuration 
-        this.paramOptions = {
+            default: {},
             timeLimit: {
-                default: 60, // 60 Seconds
+                data: 60, // 60 Seconds
                 options: null,
                 min: 0,
                 max: 60*10, // 10 Minutes
@@ -87,7 +78,7 @@ class UI{
             this._animate = () => {
                 if (this.props.currentApplet != null && this.props.mode == 'timer'){
 
-                    let actualLimit = Math.max(this.params.timeLimit, this.props.currentApplet.settings.bonanza.minTime)
+                    let actualLimit = Math.max(this.ports.timeLimit.data, this.props.currentApplet.settings.bonanza.minTime)
 
                     let timeLeft = actualLimit - (Date.now() - this.props.currentApplet.tInit)/1000
                     if (this.props.currentApplet.tUp == false){
@@ -118,8 +109,8 @@ class UI{
 
     // Ports
 
-    default = (userData) => {
-        return userData
+    default = (user) => {
+        return user
     }
 
     // Helper Functions

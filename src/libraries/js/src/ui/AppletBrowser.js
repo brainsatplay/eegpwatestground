@@ -11,7 +11,6 @@ export class AppletBrowser {
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
 
         this.props = { //Changes to this can be used to auto-update the HTML and track important UI values 
             id: String(Math.floor(Math.random() * 1000000)), //Keep random ID,
@@ -26,12 +25,9 @@ export class AppletBrowser {
 
         this.ports = {
             element: {
-                default: this.props.container,
+                data: this.props.container,
                 input: {type: null},
-                output: {type: Element},
-                onUpdate: () => {
-                    return [{data: this.props.container}]
-                }
+                output: {type: Element}
             }
         }
 
@@ -188,22 +184,22 @@ export class AppletBrowser {
                 
             <div style="margin: 5px; flex-grow: 1;">
             <p style="font-size: 80%; margin-bottom: 5px;">Device</p>
-                <select id="${this.props.id}-${randomId}-devices" style="max-height: 30px; width: 100%;">
+                <select id="${this.props.id}-devices" style="max-height: 30px; width: 100%;">
                     <option value="all" selected>All</option>
                 </select>
             </div>
             <div style="margin: 5px; flex-grow: 1;"">
                 <p style="font-size: 80%; margin-bottom: 5px;">Category</p>
-                <select id="${this.props.id}-${randomId}-categories" style="max-height: 30px; width: 100%;">
+                <select id="${this.props.id}-categories" style="max-height: 30px; width: 100%;">
                     <option value="all" selected>All</option>
                 </select>
                 </div>
             </div>
         </div>
-        <div id="${this.props.id}-${randomId}-appletsection" class="applet-container"></div>
+        <div id="${this.props.id}-appletsection" class="applet-container"></div>
         `)
 
-        let appletSection = this.props.container.querySelector(`[id="${this.props.id}-${randomId}-appletsection"]`)
+        let appletSection = this.props.container.querySelector(`[id="${this.props.id}-appletsection"]`)
 
         let categoryArray = []
         let deviceArray = []
@@ -222,7 +218,7 @@ export class AppletBrowser {
 
         categoryArray = categoryArray.map(c => c.charAt(0).toUpperCase() + c.slice(1))
         let uniqueCategories = categoryArray.filter(onlyUnique);
-        let categorySelector = this.props.container.querySelector(`[id="${this.props.id}-${randomId}-categories"`)
+        let categorySelector = this.props.container.querySelector(`[id="${this.props.id}-categories"`)
         uniqueCategories.forEach(category => {
             categorySelector.innerHTML += `<option value="${category}">${category}</option>`
         })
@@ -233,7 +229,7 @@ export class AppletBrowser {
 
         // Device Filter
         let uniqueDevices = deviceArray.filter(onlyUnique);
-        let deviceSelector = this.props.container.querySelector(`[id="${this.props.id}-${randomId}-devices"]`)
+        let deviceSelector = this.props.container.querySelector(`[id="${this.props.id}-devices"]`)
         uniqueDevices.forEach(device => {
             deviceSelector.innerHTML += `<option value="${device}">${device.charAt(0).toUpperCase() + device.slice(1)}</option>`
         })
@@ -246,6 +242,7 @@ export class AppletBrowser {
 
     filterApplets() {
         let divs = this.props.container.querySelector(`[id="${this.props.id}-appletsection"]`).querySelectorAll('.browser-card')
+        console.log(divs)
         let selectors = this.props.container.querySelector(`[id="${this.props.id}-appletheader"]`).querySelectorAll('select')
 
         let attributes = []

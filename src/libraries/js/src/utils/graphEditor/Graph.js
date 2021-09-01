@@ -65,7 +65,7 @@ export class Graph{
         return new Promise(async (resolve, reject) => {
             let edge = new Edge(e, this.nodes)
             let res = await edge.insert(this.parentNode)
-            let found,compatible
+            let found,compatible, sourceType, targetType
             if (res === true){
                 found = this.edges.find(e => {
                     if (e.structure.source == edge.structure.source && e.structure.target == edge.structure.target) return true
@@ -82,8 +82,8 @@ export class Graph{
                     else if (t === 'int') return'number'
                     else return t
                 }
-                let sourceType = coerceType(sP.output.type)
-                let targetType = coerceType(tP.input.type)
+                sourceType = coerceType(sP.output.type)
+                targetType = coerceType(tP.input.type)
 
                 let checkCompatibility = (source,target) => {
                     return source == target || (source === undefined || target === undefined) || (target instanceof Object && source instanceof target)
@@ -98,7 +98,7 @@ export class Graph{
             } else {
                 this.removeEdge(edge)
                 if (res != true) resolve({msg: 'edge is incomplete', edge: edge})
-                else if (compatible == false) reject('ports are not of compatible types')
+                else if (compatible == false) reject(`Source (${sourceType}) and Target (${targetType}) ports are not of compatible types`)
                 else if (found == null) reject('edge already exists')
                 else reject(res)
             }

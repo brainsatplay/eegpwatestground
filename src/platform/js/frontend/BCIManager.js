@@ -202,8 +202,12 @@ export class BCIAppManager {
             // </div>
             + `
             </div>
+            <div id="sidebar-toggle">
+                <div></div>
+                <div></div>
+                <div></div>
             </div>
-            <div id="sidebar-toggle"></div>
+            </div>
             <div class="overlay"></div>
         </div>
         </div>
@@ -300,6 +304,17 @@ export class BCIAppManager {
         sidebar.addEventListener('mouseleave', function (e) {
             closeAllOpenCollapsibles()
         })
+
+        let toggle = app.querySelector('#sidebar-toggle')
+        toggle.onclick = () => {
+            app.querySelector('#sidebar-container').classList.toggle('toggled')
+        }
+
+        app.querySelector('#sidebar-container').querySelector('.overlay').onclick = () => {
+            toggle.click()
+        }
+
+
 
         this.uiFragments.page = new DOMFragment(
             page_template,

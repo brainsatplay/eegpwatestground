@@ -777,7 +777,7 @@ export class Session {
 		let sub = this.state.subscribe(id, (newData) => {
 			this.state.data[id + "_flag"] = true;
 			if(sessionId) {
-				if(!this.state.data[sessionId]) this.state.data[sessionId] = {id:sessionId, userData:[{id:this.info.auth.id}]};
+				if(!this.state.data[sessionId]) this.state.data[sessionId] = {id:sessionId, userData:{id:this.info.auth.id}};
 				if (this.state.data[sessionId].userData){
 					let found = this.state.data[sessionId].userData.find((o)=>{
 						if(o.id === this.info.auth.id) {
@@ -1744,10 +1744,12 @@ else {
 				if (cmd.domain != null) applet.info.intro.domain = cmd.domain
 				if (cmd.mode != null) applet.info.intro.mode = cmd.mode
 				if (cmd.session != null) applet.info.intro.session = cmd.session
+				if (cmd.exitSession != null) applet.info.intro.exitSession = cmd.exitSession
 				if (cmd.spectating != null) applet.info.intro.spectating = cmd.spectating
 			}
 		})
 
+		let exitSession = applet.info.intro.exitSession
 		let showTitle = (applet.info.intro) ? applet.info.intro.title : true
 
 		let template = `
@@ -1786,8 +1788,6 @@ else {
 					</div>
 				</div>
 			</div>
-			<div id='${applet.props.id}exitSession' class="brainsatplay-default-button" style="position: absolute; bottom: 25px; right: 25px; z-index:95;">Exit Session</div>
-			</div>
 			`
 
 		let setup = () => {
@@ -1795,7 +1795,18 @@ else {
 		// Setup HTML References
 		let modeScreen = document.getElementById(`${applet.props.id}mode-screen`)
 		let sessionSelection = document.getElementById(`${applet.props.id}sessionSelection`)
-		let exitSession = document.getElementById(`${applet.props.id}exitSession`)
+
+
+		if (typeof exitSession === 'string') exitSession = document.getElementById(exitSession)
+		if (exitSession == null) {
+			exitSession = document.createElement(`div`) // EDIT
+			exitSession.classList.add('brainsatplay-default-button')
+			exitSession.style = `position: absolute; bottom: 25px; right: 25px; z-index:95;`
+			exitSession.innerHTML = 'Exit Session'
+			document.getElementById(`${applet.props.id}IntroFragment`).insertAdjacentElement('afterend', exitSession)
+		}
+
+
 		const hero = document.getElementById(`${applet.props.id}appHero`)
 		const loadingBarElement = document.querySelector('.brainsatplay-intro-loadingbar')
 
@@ -1936,14 +1947,11 @@ else {
 		// Login Screen
 		if (applet.info.intro?.mode != 'single' && applet.info.intro?.mode != 'solo'){
 			let onsocketopen = () => {
-				console.log(this.socket.readyState)
 				if (this.socket.readyState === 1) {
 					sessionSearch.click()
 					let loginScreen = document.getElementById(`${this.id}login-page`)
 
 					let sub1 = this.state.subscribe('commandResult', (newResult) => {
-
-						console.log(newResult)
 						if (newResult.msg === 'appNotFound') {
 							createSession.click()
 
@@ -1976,7 +1984,6 @@ else {
 			// Auto-set username with Google Login
 			if (this.info.googleAuth != null) {
 				this.info.googleAuth.refreshCustomData().then(data => {
-					console.log(data)
 					this.info.auth.username = data.username
 				})
 			}
@@ -2177,7 +2184,6 @@ else {
 	onconnectionLost(response) { //If a user is removed from the server
 		let found = false; let idx = 0;
 		let c = this.info.subscriptions.find((o, i) => {
-			console.log(o, response)
 			if (o.id === response.id) {
 				found = true;
 				return true;
@@ -2218,6 +2224,7 @@ else {
 	}
 
 	getBrainstormData(query, props=[], type = 'app', format = 'default') {
+
 
 		let sessionInd,idInd,propInd,structureFilter
 
@@ -2324,7 +2331,7 @@ else {
 			console.error('please specify a query for the Brainstorm (app, username, prop)')
 		}
 
-		console.log(arr)
+		// console.log(arr)
 
 		return arr
 	}
@@ -2413,6 +2420,7 @@ class deviceStream {
 
 	configureRoutes = (parentNode=document.body) => {
 		this.info.events.addControls(parentNode);
+		this.info.events.addDebugger(parentNode);
     }
 
 	disconnect = () => {

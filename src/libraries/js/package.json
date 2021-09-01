@@ -21,6 +21,7 @@
   "dependencies": {
     "@neurosity/notion": "^5.2.0",
     "bci2k": "^2.3.3",
+    "bcijs": "^1.8.0",
     "browserfs": "^1.4.3",
     "dat.gui": "^0.7.7",
     "file-saver": "^2.0.5",
@@ -33,8 +34,10 @@
     "prismjs": "^1.23.0",
     "realm-web": "^1.3.0",
     "rxjs-compat": "^6.6.7",
+    "smoothie": "^1.35.0",
     "streamsearch": "^0.1.2",
     "three": "^0.129.0",
+    "uplot": "^1.4.0",
     "web-worker": "^1.0.0",
     "webxr-polyfill": "^2.0.3"
   }

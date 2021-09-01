@@ -9,7 +9,7 @@ export class HEG{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             state: new StateManager(),
@@ -25,10 +25,7 @@ export class HEG{
                 edit: false,
                 input: {type:null},
                 output: {type: Object, name: 'DataAtlas'},
-                default: this.session.atlas.data,
-                onUpdate: () => {
-                    return [{data: this.session.atlas.data}]
-                }
+                data: this.session.atlas.data
             }
         }
 
@@ -38,11 +35,11 @@ export class HEG{
         keys.forEach(key => {
             this.ports[key] = {
                 edit: false,
-                default: [],
+                data: [],
                 input: {type:null},
                 output: {type:Array},
-                onUpdate: (userData) => {
-                    return [{data: this.session.atlas.data.heg[0][key]}]
+                onUpdate: (user) => {
+                    return {data: this.session.atlas.data.heg[0][key]}
                 }
             }
         })

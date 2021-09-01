@@ -5,14 +5,7 @@ export class Line{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
 
-        this.paramOptions = {
-            color: {default: '#ffffff'},
-            y: {default: 0.5, min: 0, max:1, step: 0.001},
-            weight: {default: 1, min: 0, max:10, step: 1.0},
-            scale: {default: 1},
-        }
 
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),
@@ -24,20 +17,25 @@ export class Line{
 
         this.ports = {
             default: {
-                default: this.props.function,
+                data: this.props.function,
                 input: {type: null},
                 output: {type: Object},
                 onUpdate: () => {
-                    return [{data: this.props.function}]
+                    return {data: this.props.function}
                 }
             },
             set: {
                 input: {type: Array},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    this.props.data = userData[0].data
+                onUpdate: (user) => {
+                    this.props.data = user.data
                 }
-            }
+            },
+
+            color: {data: '#ffffff'},
+            y: {data: 0.5, min: 0, max:1, step: 0.001},
+            weight: {data: 1, min: 0, max:10, step: 1.0},
+            scale: {data: 1},
         }
 
     }
@@ -54,9 +52,9 @@ export class Line{
         // var scale = 20;
         ctx.beginPath(); // Draw a new path
         let dx = width/(this.props.data.length - 1)
-        this.props.data.forEach((y,i) => ctx.lineTo(dx*i,-Number.parseFloat(this.params.scale)*y + Number.parseFloat(height*this.params.y)))
-        ctx.strokeStyle = this.params.color; // Pick a color
-        ctx.lineWidth = Number.parseFloat(this.params.weight)
+        this.props.data.forEach((y,i) => ctx.lineTo(dx*i,-Number.parseFloat(this.ports.scale.data)*y + Number.parseFloat(height*this.ports.y.data)))
+        ctx.strokeStyle = this.ports.color.data; // Pick a color
+        ctx.lineWidth = Number.parseFloat(this.ports.weight.data)
         ctx.stroke(); // Draw
     }
 }

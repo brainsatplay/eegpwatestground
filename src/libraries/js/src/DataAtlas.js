@@ -680,15 +680,15 @@ export class DataAtlas {
 	}
 
 	//return data object for FP1 to FP2 (AF7 to AF8 on Muse)
-	getFrontalData = () => {
+	getFrontalData = (atlas_data) => {
 		let frontalData = [];
-		if(this.settings.eeg) {
+		// if(this.settings.eeg) {
 			let regex = new RegExp('([F]|[F][A-Za-z]|[A-Za-z][F])([0-9]|[0-9][0-9])','i')
-			let frontalTags = this.data.eegshared.eegChannelTags.filter(({tag}) => tag.match(regex))
+			let frontalTags = atlas_data.eegshared.eegChannelTags.filter(({tag}) => tag.match(regex))
 			frontalTags.forEach((o) => {
-				frontalData.push(this.getEEGDataByTag(o.tag))
+				frontalData.push(this.getEEGDataByTag(o.tag, atlas_data))
 			})
-        }
+        // }
 		return frontalData;
 	}
 
@@ -776,7 +776,7 @@ export class DataAtlas {
 	//Calculate the latest theta/beta ratio from bandpower averages
 	getThetaBetaRatio = (eeg_data) => {
 		if(eeg_data.fftCount > 0) {
-			let ratio = eeg_data.means.theta[eeg_data.fftCount-1] / eeg_data.means.beta[eeg_data.fftCount-1];
+			let ratio = eeg_data.means.theta[eeg_data.fftCount-1] / eeg_data.means.beta[eeg_data.fftCount-1]; // takes last fft average for each band
 			return ratio;
 		} else return 0;
 	}
@@ -842,8 +842,8 @@ export class DataAtlas {
 	getBlink = (params = {}) => {
 		let node = this.graph.getNode(this.props.id, 'blink')
 		this.graph.updateParams(node, params)
-		let blink = this.graph.runSafe(node,'default', [{data: this.data, forceUpdate: true}])
-		return blink[0].data
+		let blink = this.graph.runSafe(node,'default', {data: this.data, forceUpdate: true})
+		return blink.data
 	}
 
 	isExtrema(arr,critical='peak') { //Checks if the middle point of the (odd-numbered) array is a local extrema. options: 'peak','valley','tangent'. Even numbered arrays are popped

@@ -7,11 +7,6 @@ export class Cursor{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
-
-        this.paramOptions = {
-            robot: {default: false}
-        }
 
         this.props = {
             cursorSize: {
@@ -28,17 +23,30 @@ export class Cursor{
         }
 
         this.ports = {
+            robot: {data: false},
             click: {
                 input: {type: 'boolean'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    let decision = this._getDecision(user)
+                    if (decision) this._mouseClick()
+                }
             },
             dx: {
                 input: {type: 'number'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    let choice = Number(user.data)
+                    this._moveMouse(choice,0)
+                }
             },
             dy: {
                 input: {type: 'number'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    let choice = Number(user.data)
+                    this._moveMouse(0,choice)
+                }
             }
         }
     }
@@ -81,9 +89,9 @@ export class Cursor{
             if (this.props.looping){
 
                 // Start Robot if Required
-                if (this.params.robot && !this.session.info.connected){
-                    this._startRobot()
-                }
+                // if (this.ports.robot.data && !this.session.info.connected){
+                //     this._startRobot()
+                // }
                 setTimeout(() => {animate()}, 1000/10)
             }
         }
@@ -104,35 +112,17 @@ export class Cursor{
         })
     }
 
-    click = (userData) => {
-        let decision = this._getDecision(userData)
-        if (decision) this._mouseClick()
-    }
-
-    dx = (userData) => {
-        let choices = userData.map(u => Number(u.data))
-        let meanDiff = this.session.atlas.mean(choices)
-        this._moveMouse(meanDiff,0)
-    }
-
-    dy = (userData) => {
-        let choices = userData.map(u => Number(u.data))
-        let meanDiff = this.session.atlas.mean(choices)
-        this._moveMouse(0,meanDiff)
-    }
-
-    _getDecision(userData, command){
-        let choices = userData.map(u => Number(u.data))
-        let mean = this.session.atlas.mean(choices)
+    _getDecision(user, command){
+        let mean = Number(user.data)
         if (command) this.props[command] = (mean >= 0.5)
         return (mean >= 0.5)
     }
 
     _mouseClick = () => {          
         // gets the object on image cursor position
-        if (this.params.robot){
-            this.session.sendBrainstormCommand(['mouseClick'])
-        } else {
+        // if (this.ports.robot.data){
+        //     this.session.sendBrainstormCommand(['mouseClick'])
+        // } else {
             var tmp = document.elementFromPoint(this.props.x + this.props.px, this.props.y + this.props.py); 
             if (tmp){
                 this.props.mutex = true;
@@ -142,7 +132,7 @@ export class Cursor{
                 this.props.cursor.style.left = (this.props.px + this.props.x) + "px";
                 this.props.cursor.style.top = (this.props.py + this.props.y) + "px";
             }
-        }
+        // }
     }
 
 
@@ -161,7 +151,7 @@ export class Cursor{
     }
 
     _moveMouse(dx,dy){
-        if (this.params.robot){
+        if (this.ports.robot.data){
             this.session.sendBrainstormCommand(['moveMouse', {x:dx, y:dy}])
         } 
         else {
@@ -175,7 +165,7 @@ export class Cursor{
         // Trigger Cursor Events
         this.props.cursor.style.left = `${this.props.x}px`
         this.props.cursor.style.top = `${this.props.y}px`
-        this._mouseHover(!this.params.robot)
+        this._mouseHover(!this.ports.robot.data)
     }
 
 
@@ -225,11 +215,11 @@ export class Cursor{
     } catch{}
     }
     
-    _startRobot(){
-        if (this.params.robot && !this.session.info.connected){
-            this.session.login(undefined, undefined, (res) => {
-                console.log('connected')
-            })
-        }
-    }
+    // _startRobot(){
+    //     if (this.ports.robot.data && !this.session.info.connected){
+    //         this.session.login(undefined, undefined, (res) => {
+    //             console.log('connected')
+    //         })
+    //     }
+    // }
 }

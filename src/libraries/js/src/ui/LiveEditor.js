@@ -247,21 +247,10 @@ export class LiveEditor {
     }
 
     _updateSettings(settings){
-        if (settings.onSave){
-            this.onSave = settings.onSave
-        }
-
-        if (settings.onInput){
-            this.onInput = settings.onInput
-        }
-
-        if (settings.onOpen){
-            this.onOpen = settings.onOpen
-        }
-
-        if (settings.onOpen){
-            this.onClose = settings.onClose
-        }
+        this.onSave = settings.onSave ?? (() => {})
+        this.onInput = settings.onInput ?? (() => {})
+        this.onOpen = settings.onOpen ?? (() => {})
+        this.onClose = settings.onClose ?? (() => {})
 
         let close = document.getElementById(`${this.props.id}close`)
         if (close && settings.showClose === false) close.style.display = 'none'

@@ -6,7 +6,7 @@ export class WebRTC{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             channel: null,
@@ -18,12 +18,11 @@ export class WebRTC{
                 default: this.session.info.auth.url.href,
                 input: {type: 'string'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    let u = userData[0]
-                    let valid = this.validURL(u.data)
+                onUpdate: (user) => {
+                    let valid = this.validURL(user.data)
                     if (valid){
-                        this.params.url = u.data
-                        this.session.graph.runSafe(this,'connected', [{data: true, forceUpdate: true}])
+                        this.ports.url.data = user.data
+                        this.session.graph.runSafe(this,'connected', {data: true, forceUpdate: true})
                     }
                 }
             }, 
@@ -31,20 +30,20 @@ export class WebRTC{
                 default: false,
                 input: {type: 'boolean'},
                 output: {type: 'boolean'},
-                onUpdate: (userData) => {
+                onUpdate: (user) => {
                     return new Promise(resolve => {
-                        let choice = userData[0].data
+                        let choice = user.data
                         if (choice){
-                            let url = new URL(this.params.url)
+                            let url = new URL(this.ports.url.data)
                             if (this.props.channel == null){
                                 this._createWebRTCConnection(url, () => {
-                                    resolve([{data: true}])
+                                    resolve({data: true})
                                 })                             
                             }
                 
                         } else {
                             this._closeDataChannel()
-                            resolve([{data: false}])
+                            resolve({data: false})
                         }
                     })
                 }
@@ -52,16 +51,16 @@ export class WebRTC{
             message: {
                 input: {type: null},
                 output: {type: undefined},
-                onUpdate: (userData) => {
-                    return userData
+                onUpdate: (user) => {
+                    return user
                 }
             },
             send: {
                 input: {type: undefined},
                 output: {type: null},
-                onUpdate: (userData) => {
+                onUpdate: (user) => {
                     if (this.props.channel != null){
-                        this.props.channel.send(JSON.stringify(userData[0].data))
+                        this.props.channel.send(JSON.stringify(user.data))
 
                     }
                 }
@@ -70,7 +69,7 @@ export class WebRTC{
     }
 
     init = () => {
-        this.session.graph.runSafe(this, 'connected', [{data: true, forceUpdate: true}])
+        this.session.graph.runSafe(this, 'connected', {data: true, forceUpdate: true})
     }
 
     deinit = () => {
@@ -89,7 +88,7 @@ export class WebRTC{
         dataChannel.addEventListener('open', event => {
             console.log('WebRTC opened')
             this.props.channel = dataChannel
-            this.params.connected = true
+            this.ports.connected.data = true
             connectCallback()
         });
         
@@ -97,7 +96,7 @@ export class WebRTC{
         dataChannel.addEventListener('close', event => {
             console.log('WebRTC closed')
             this.props.channel = null
-            this.params.connected = false
+            this.ports.connected.data = false
         });
 
         window.onkeypress = () => {
@@ -109,7 +108,7 @@ export class WebRTC{
         dataChannel.addEventListener('message', event => {
             const msg = event.data;
             console.log(msg)
-            this.session.graph.runSafe(this,'message', [{data: msg, forceUpdate: true}])
+            this.session.graph.runSafe(this,'message', {data: msg, forceUpdate: true})
         });
     }
 

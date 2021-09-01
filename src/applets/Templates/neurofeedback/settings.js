@@ -24,7 +24,20 @@ export const settings = {
       nodes: [
         {id: 'eeg', class: brainsatplay.plugins.biosignals.EEG},
         {id: 'neurofeedback', class: brainsatplay.plugins.algorithms.Neurofeedback, params: {}},
-        {id: 'brainstorm', class: brainsatplay.plugins.networking.Brainstorm, params: {}},
+        {id: 'brainstorm', class: brainsatplay.plugins.networking.Brainstorm, params: {
+
+          onUserConnected: (u) => {
+            let parser = settings.graph.nodes.find(n => n.id === 'parser')
+            console.log('ONUSERCONNECTED',u)
+            parser.instance._userAdded(u)
+          },
+      
+          onUserDisconnected: (u) => {
+            let parser = settings.graph.nodes.find(n => n.id === 'parser')
+            parser.instance._userRemoved(u)
+          },
+
+        }},
         {id: 'parser', class: Parser, params: {}},
         {id: 'ui', class: brainsatplay.plugins.interfaces.UI, params: {
           style: `

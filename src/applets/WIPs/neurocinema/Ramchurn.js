@@ -21,7 +21,7 @@ export class Ramchurn{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             currentScene: 0,
@@ -32,6 +32,11 @@ export class Ramchurn{
                 primary: [],
                 secondary: [],
                 vox: []
+            },
+
+            assets: {
+                audio: [], 
+                video: []
             },
             
             // The Moment (http://braincontrolledmovie.co.uk/)
@@ -70,18 +75,34 @@ export class Ramchurn{
         this.props.input.multiple = true
 
         this.props.input.oninput = () => {
-            this.session.graph.runSafe(this,'load', [{data: this.props.input.files}])
+            this.session.graph.runSafe(this,'load', {data: this.props.input.files})
         }
 
-        this.props.button = document.createElement('button')
-        this.props.button.classList.add('brainsatplay-default-button')
-        this.props.button.style.maxWidth = '50%'
-        this.props.button.innerHTML = 'Load Film Files'
-        this.props.button.onclick = () => {
+        this.props.buttons = []
+
+
+        let load = document.createElement('div')
+        load.style = `
+            height: 100%; 
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s;
+        `
+
+        load.innerHTML = '<button class="brainsatplay-default-button" style="width: 80%; flex-grow: 0;">Load Film</button>'
+        load.onclick = () => {
             this.props.input.click()
         }
+        this.props.container.insertAdjacentElement('beforeend', load)
+        this.props.buttons.push(load)
 
-        this.props.container.insertAdjacentElement('beforeend', this.props.button)
+        let design = document.createElement('div')
+        design.style.cssText = load.style.cssText
+        design.innerHTML = '<button class="brainsatplay-default-button disabled" style="width: 80%; flex-grow: 0;">Design Film</button>'
+        this.props.container.insertAdjacentElement('beforeend', design)
+        this.props.buttons.push(design)
 
         this.ports = {
 
@@ -89,9 +110,11 @@ export class Ramchurn{
             start: {
                 input: {type: 'boolean'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    if (userData[0].data){
+                onUpdate: (user) => {
+                    if (user.data === true){
                         this.props.looping = true
+                        this.props.container.style.opacity = '0'
+                        this.setScene(this.props.currentScene)
                         this.animate()
                     }
                 }
@@ -101,8 +124,8 @@ export class Ramchurn{
             load: {
                 input: {type: 'file', multiple: true, accept: "video/mp4, audio/mpeg"},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    let files = Array.from(userData[0].data)
+                onUpdate: (user) => {
+                    let files = Array.from(user.data)
                     files.forEach(f => {
                         if (f.type === 'audio/mpeg'){
                             if (f.name.toLowerCase().includes('vox')){
@@ -112,61 +135,88 @@ export class Ramchurn{
                             } else if (f.name.includes('2')){
                                 this.props.audio.secondary.push(f)
                             }
+                            this.props.assets.audio.push(f)
                         } else if (f.type === 'video/mp4') {
-                            this.props.videos.push(f)
+                            this.props.assets.video.push(f)
                         }
                     })
 
-                    this.props.container.style.opacity = '0'
+                    this.props.buttons.forEach(el => el.style.opacity = '0')
+                    this.props.container.innerHTML = ''
 
-                    this.props.videos = this.shuffle(this.props.videos) // Shuffle videos
-                    this.setScene(this.props.currentScene)
-                    this.session.graph.runSafe(this,'start', [{data: true}])
+                    let loaderContainer = document.createElement('div')
+                    loaderContainer.style = `
+                    display: flex;
+                    flex-direction: column;
+                    align-content: center;
+                    align-items: center;`
+
+                    let loadingAnimation = document.createElement('div')
+                    loadingAnimation.classList.add('loading-animation')
+                    let loadingMessage = document.createElement('p')
+                    loadingMessage.innerHTML = `Loading ${this.props.assets.audio.length + this.props.assets.video.length} files. Please wait...`
+
+                    loaderContainer.insertAdjacentElement('beforeend', loadingAnimation)
+                    loaderContainer.insertAdjacentElement('beforeend', loadingMessage)
+                    this.props.container.insertAdjacentElement('beforeend', loaderContainer)                    
+
+                    this.props.assets.audio = this.shuffle(this.props.assets.audio) // Shuffle videos
+                    this.props.assets.video = this.shuffle(this.props.assets.video) // Shuffle videos
+                    this.session.graph.runSafe(this, 'setAudio', {data: this.props.assets.audio}) // Preload audio in mixer
                 }
             },
 
             // Send Audio and Video Out
-            video: {
+            controlVideo: {
                 input: {type: null},
                 output: {type: 'file'},
-                default: [],
-                onUpdate: (userData) => {
+                // default: [],
+                onUpdate: (user) => {
                     // Get Combination
-                    let combination = userData[0].data
+                    let combination = user.data
                     let arr = []
                     this.props.keys.forEach(key => {
                         if (combination[key]?.video) arr.push(combination[key].video)
                     })
-                    return [{data: arr}]
+                    return {data: arr}
                 }
             },
-            audio: {
+            setAudio: {
                 input: {type: null},
                 output: {type: 'file'},
-                default: [],
-                onUpdate: (userData) => {
-                    let combination = userData[0].data
+                // default: [],
+                onUpdate: (user) => {
+                    return {data: user.data}
+                }
+            },
+            controlAudio: {
+                input: {type: null},
+                output: {type: Array},
+                // default: [],
+                onUpdate: (user) => {
+                    let combination =user.data
                     let arr = []
                     this.props.keys.forEach(key => {
                         if (combination[key]?.audio) arr.push(combination[key].audio)
                         if (combination[key]?.vox) arr.push(combination[key].vox)
                     })
-                    return [{data: arr}]
+
+                    return {data: arr}
                 }
             },
 
             cut: {
                 input: {type: 'boolean'},
                 output: {type: 'boolean'},
-                onUpdate: (userData) => {
+                onUpdate: (user) => {
                     this.logCut(this.props.scenes[this.props.currentScene])
                     this.props.selectedKey = (this.props.selectedKey + 1) % 2
-                    return userData
+                    return user
                 }
             },
 
             element: {
-                default: this.props.container,
+                data: this.props.container,
                 input: {type: null},
                 output: {type: Element}
             }
@@ -213,8 +263,8 @@ export class Ramchurn{
         this.props.scenes[i].lastCut = null
         this.props.scenes[i].cutSlow = null
 
-        this.session.graph.runSafe(this, 'video', [{data: this.props.scenes[i].combination}])
-        this.session.graph.runSafe(this, 'audio', [{data: this.props.scenes[i].combination}])
+        this.session.graph.runSafe(this, 'controlVideo', {data: this.props.scenes[i].combination, meta: {replace: true}})
+        this.session.graph.runSafe(this, 'controlAudio', {data: this.props.scenes[i].combination})
     }
 
     endScene = (scene) => {
@@ -236,7 +286,7 @@ export class Ramchurn{
 
             let key = this.props.keys[this.props.selectedKey]
             let duration = currentTime - currentScene.lastCut
-            currentScene[`durationOn${key[0].toUpperCase + key.slice(1)}`] += duration
+            currentScene[`durationOn${key[0].toUpperCase() + key.slice(1)}`] += duration
 
             if (currentScene.averageDuration == null) currentScene.averageDuration = duration
             else currentScene.averageDuration = (currentScene.averageDuration + duration) / 2
@@ -264,9 +314,8 @@ export class Ramchurn{
             secondary: {}
         }
         
-
         // Only Choose New Sources
-        let choices = this.props.videos
+        let choices = this.props.assets.video
         if (prevScene) {
             let currentSources = [prevScene.combination.primary.video, prevScene.combination.secondary.video]
             choices = choices.filter(f => !currentSources.includes(f))

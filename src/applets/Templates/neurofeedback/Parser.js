@@ -7,12 +7,12 @@ class Parser{
         // Generic Plugin Attributes
         this.label = label
         this.session = session
-        this.params = {}
 
         // UI Identifier
         this.props = {
             id: String(Math.floor(Math.random()*1000000)),
-            state: null
+            state: null,
+            userReadouts: {}
         }
 
         this.props.container = document.createElement('div')
@@ -22,60 +22,62 @@ class Parser{
         `
 
         this.props.label = document.createElement('h1')
-        this.props.readout = document.createElement('div')
+        this.props.readouts = document.createElement('div')
 
         this.props.label.innerHTML = 'LABEL'
-        this.props.readout.innerHTML = `<p class="readout" >Username: Data</p>`
+
+        // this.props.defaultReadout = document.createElement('p')
+        // this.props.defaultReadout.classList.add('readout')
+        // this.props.defaultReadout.innerHTML = 'Username: Data'
+        // this.props.readouts.insertAdjacentElement('beforeend', this.props.defaultReadout)
 
         this.props.container.insertAdjacentElement('beforeend', this.props.label)
-        this.props.container.insertAdjacentElement('beforeend', this.props.readout)
+        this.props.container.insertAdjacentElement('beforeend', this.props.readouts)
 
         // Port Definition
         this.ports = {
             default: {
                 input: {type: 'number'},
                 output: {type: null},
-                onUpdate: (userData) => {
-
-                    console.log(userData)
-                    this.props.label.innerHTML = userData[0].meta.label
-                    let coherenceReadouts = this.props.readout.querySelectorAll(`.readout`)
-            
-                    let idRegistry = new Set(userData.map(u => u.id))
-            
-                    for (let readout of coherenceReadouts){
-                        if (Array.isArray(userData)){
-                            let id = readout.id.replace(`${this.props.id}-`,'')
-                            let found = userData.find(u => u.id === id)
-                            if (found) {
-                                idRegistry.delete(found.id)
-                                readout.innerHTML = `${found.username}: ${found.data}`
-                            } else {
-                                readout.remove()
-                            }
-                        }
-                    }
-            
-                    idRegistry.forEach(id => {
-                        let u = userData.find(u => u.id === id)
-                        let value = u.data
-                        if (typeof value === "number") value = value.toFixed(2)
-                        this.props.readout.innerHTML += `<p id="${this.props.id}-${u.id}" class="readout" >${u.username}: ${u.data}</p>`
-                    })
+                onUpdate: (user) => {
+                    console.error('PARSER',user)
+                    this.props.label.innerHTML = user.meta.label    
+                    this.props.userReadouts[user.id].innerHTML = `${user.username}: ${user.data}`
             },
             
         }, 
         element: {
-            default: this.props.container,
+            data: this.props.container,
             input: {type: null},
             output: {type: Element},
         }
         }
     }
 
-    init = () =>  {}
+    init = () =>  {    }
 
     deinit = () => {}
+
+    _userAdded = (user) => {
+        this.props.userReadouts[user.id] = document.createElement('p')
+        this.props.userReadouts[user.id].id = `${this.props.id}-${user.id}`
+        this.props.userReadouts[user.id].classList.add('readout')
+        this.props.userReadouts[user.id].innerHTML = `${user.username}: ${user.data ?? ''}`
+        this.props.readouts.insertAdjacentElement('beforeend', this.props.userReadouts[user.id])
+        this._updateUI()
+    }
+
+    _userRemoved = (user) => {
+        this.props.userReadouts[user.id].remove()
+        delete this.props.userReadouts[user.id]
+        this._updateUI()
+    }
+
+    _updateUI = () => {
+        // let coherenceReadouts = this.props.readouts.querySelectorAll(`.readout`)
+        // if (coherenceReadouts.length > 1) this.props.defaultReadout.style.display = 'none'
+        // else this.props.defaultReadout.style.display = 'block'
+    }
 }
 
 export {Parser}

@@ -2015,14 +2015,14 @@ void main(){
         let node = this.graph.getNode(this.props.id, 'buzz')
 
         if (modifiers.iFFT){
-            this.graph.runSafe(node, 'audioToMotors',[{data: modifiers.iFFT, meta: {label: 'iFFT'}}])
+            this.graph.runSafe(node, 'audioToMotors',{data: modifiers.iFFT, meta: {label: 'iFFT'}})
         }
         if (modifiers.iAudio & modifiers.iFFT.reduce((a,b) => a + b) == 0){
-            this.graph.runSafe(node, 'audioToMotors',[{data: modifiers.iAudio, meta: {label: 'iAudio'}}])
+            this.graph.runSafe(node, 'audioToMotors',{data: modifiers.iAudio, meta: {label: 'iAudio'}})
         }
 
         if (modifiers.iFrontalAlpha1Coherence){
-            this.graph.runSafe(node, 'fillLEDs',[{data: modifiers.iFrontalAlpha1Coherence, meta: {label: 'iFrontalAlpha1Coherence'}}])
+            this.graph.runSafe(node, 'fillLEDs',{data: modifiers.iFrontalAlpha1Coherence, meta: {label: 'iFrontalAlpha1Coherence'}})
         }
     }
 } 

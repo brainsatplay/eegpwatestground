@@ -8,17 +8,9 @@ export class Train{
     static id = String(Math.floor(Math.random()*1000000))
     static hidden = true
     
-    constructor(label, session, params={}) {
+    constructor(label, session) {
         this.label = label
         this.session = session
-        this.params = params
-
-        this.paramOptions = {
-            trials: {default: 10, min: 1, max: 1000, step: 1},
-            trialDuration: {default: 4000, min: 0, max: 60*60*1000, step: 1},
-            interTrialIntervalMin: {default: 500, min: 0, max: 60*60*1000, step: 1},
-            interTrialIntervalMax: {default: 500, min: 0, max: 60*60*1000, step: 1},
-        }
         
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),            
@@ -29,22 +21,22 @@ export class Train{
         this.props.container.classList.add('training-prompt-container')
 
         this.ports = {
+            applets: {data: []},
+            trials: {data: 10, min: 1, max: 1000, step: 1},
+            trialDuration: {data: 4000, min: 0, max: 60*60*1000, step: 1},
+            interTrialIntervalMin: {data: 500, min: 0, max: 60*60*1000, step: 1},
+            interTrialIntervalMax: {data: 500, min: 0, max: 60*60*1000, step: 1},
+
             mode: {
                 input: {type: 'string'},
                 output: {type: null},
-                default: 'Motor Imagery',
-                options: ['Motor Imagery', 'Other'],
-                onUpdate: (userData) => {
-                    this.params.mode = userData[0].data
-                }
+                data: 'Motor Imagery',
+                options: ['Motor Imagery', 'Other']
             },
             element: {
-                default: this.props.container,
+                data: this.props.container,
                 input: {type: null},
-                output: {type: Element},
-                onUpdate: () => {
-                    return [{data: this.props.container}]
-                }
+                output: {type: Element}
             }
         }
     }
@@ -54,7 +46,7 @@ export class Train{
         this.props.container.insertAdjacentHTML('beforeend', `
         <div id='${this.props.id}prompt' class="training-prompt">
             <div>
-                <h2>${this.params.mode}</h2>
+                <h2>${this.ports.mode.data}</h2>
                 <p>Latest Performance: <span id="${this.props.id}performance"></spam></p>
             </div>
             <div>
@@ -71,7 +63,7 @@ export class Train{
 
         // Create Training Overlay
         let trainingInfo = {id: this.props.id, class: null}
-        if (this.params.mode === 'Motor Imagery'){
+        if (this.ports.mode.data === 'Motor Imagery'){
             trainingInfo.class = LDA
         } else {
             trainingInfo.class = Blink
@@ -85,7 +77,7 @@ export class Train{
             this.props.trainingOverlay.classList.toggle('shown')
         }
 
-        // this.session.graph.runSafe(this,'ui',[{forceRun: true, forceUpdate: true}])
+        // this.session.graph.runSafe(this,'ui',{forceRun: true, forceUpdate: true})
     }
 
     deinit = () => {
@@ -106,7 +98,7 @@ export class Train{
         // Get Compatible Models and Games
         let modelTypes = Object.keys(brainsatplay.plugins.machinelearning)
         
-        this.props.trainingOverlay.insertAdjacentHTML('beforeend', `<h1>${this.params.mode}</h1>`)  
+        this.props.trainingOverlay.insertAdjacentHTML('beforeend', `<h1>${this.ports.mode.data}</h1>`)  
 
         // Display Models
         let selectedModel
@@ -161,7 +153,7 @@ export class Train{
             }
         }
 
-        let applets = createCards(this.params.applets, appletFilter, clickCallback)
+        let applets = createCards(this.ports.applets.data, appletFilter, clickCallback)
 
         applets.forEach((o,i) => {
             gameContainer.insertAdjacentElement('beforeend', o.element)

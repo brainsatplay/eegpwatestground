@@ -5,7 +5,7 @@ export class Peak{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             prevValue: null,
@@ -17,24 +17,24 @@ export class Peak{
 
         this.ports = {
             default: {
-                default: false,
+                data: false,
                 input: {type: 'number'},
                 output: {type: 'boolean'},
-                onUpdate: (userData) => {
-                    let currentValue = userData[0].data
+                onUpdate: (user) => {
+                    let currentValue = user.data
                     if (this.props.prevValue == null) {
                         this.props.prevValue = currentValue
-                        userData[0].data = false
+                        user.data = false
                     } else {
                         let slopeDirection = Math.sign(currentValue - this.props.prevValue)
                         if (this.props.prevSlope != slopeDirection){
-                            if (this.props.prevSlope === 1) userData[0].data = true // Only fire on movement away from 1
-                            else userData[0].data = false
+                            if (this.props.prevSlope === 1) user.data = true // Only fire on movement away from 1
+                            else user.data = false
                             this.props.prevSlope = slopeDirection
-                        } else userData[0].data = false
+                        } else user.data = false
                         this.props.prevValue = currentValue
                     }
-                    return userData
+                    return user
                 }
             }
         }

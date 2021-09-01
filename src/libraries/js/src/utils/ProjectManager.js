@@ -35,7 +35,7 @@ export class ProjectManager {
 
         // Set Server Connection Variables
         this.serverResolved = true
-        this.publishURL = (this.local) ? 'http://localhost/apps' : 'https://brainsatplay.com/apps'
+        this.publishURL = (this.local) ? 'http://localhost/apps' : 'https://server.brainsatplay.com/apps'
 
         this.createDefaultHTML = (script) => {
             return `
@@ -265,22 +265,23 @@ app.init()`)
 
         info.graph.nodes.forEach((n, i) => {
 
-            for (let k in n.params){ 
-                // Delete non-editable elements
-                if (n.instance.ports[k]?.edit === false) {
-                    delete n.params[k] 
-                }
+            // FIX
+            // for (let k in n.params){ 
+            //     // Delete non-editable elements
+            //     if (n.instance.ports[k]?.edit === false) {
+            //         delete n.params[k] 
+            //     }
 
-                // Delete if non-stringifiable object
-                if (typeof n.params[k] === 'object' ){
-                    let result = JSON.parse(JSON.stringify(n.params[k]))
-                    if (typeof result !== 'object' || Object.keys(result).length == 0){ // Removes Elements
-                        delete n.params[k]
-                    } else {
-                        n.params[k] = result
-                    }
-                }
-            } 
+            //     // Delete if non-stringifiable object
+            //     if (typeof n.params[k] === 'object' ){
+            //         let result = JSON.parse(JSON.stringify(n.params[k]))
+            //         if (typeof result !== 'object' || Object.keys(result).length == 0){ // Removes Elements
+            //             delete n.params[k]
+            //         } else {
+            //             n.params[k] = result
+            //         }
+            //     }
+            // } 
 
             delete n['instance']
             delete n['ui']

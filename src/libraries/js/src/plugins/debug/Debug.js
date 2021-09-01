@@ -5,16 +5,15 @@ export class Debug{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.ports = {
             default: {
+                data: undefined,
                 input: {type: undefined},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    userData.forEach((u,i) => {
-                        console.log(u.username,u.data,u.meta,u)
-                    })
+                onUpdate: (user) => {
+                    console.log(user.username,user.data,user.meta,user)
                 }
             }
         }

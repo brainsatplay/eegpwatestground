@@ -12,7 +12,7 @@ export class Unity{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             id: String(Math.floor(Math.random()*1000000)),
@@ -22,27 +22,21 @@ export class Unity{
         this.props.canvas.style = `width: 100%; height: 100%;`
 
         this.ports = {
-            default: {
-                input: {type: undefined},
-                output: {type: null},
-                onUpdate: (userData) => {
-                    // userData.forEach((u,i) => {
-                        let data = userData[0].data
-                        console.log(data)
-                        if (this.props.instance) this.props.instance.SendMessage('System', 'UpdateData', data);
-                    // })
-                }
-            },
             element: {
-                default: this.props.canvas,
+                data: this.props.canvas,
                 input: {type: undefined},
                 output: {type: Element},
             },
             webbuild: {
-                default: webbuild,
+                data: webbuild,
                 input: {type: null},
                 output: {type: null},
-            }
+            },
+            commands: {
+                data: [],
+                input: {type: Array},
+                output: {type: null},
+            },
         }
     }
 
@@ -51,8 +45,8 @@ export class Unity{
         let onError = () => { };
         
         //Add whatever else you need to initialize
-        if (this.params.webbuild){
-            this.params.webbuild.createUnityInstance(this.props.canvas, webconfig.config, () =>
+        if (this.ports.webbuild.data){
+            this.ports.webbuild.data.createUnityInstance(this.props.canvas, webconfig.config, () =>
             { }).then((unityInstance) =>
             {
                 this.props.instance = unityInstance;
@@ -68,6 +62,20 @@ export class Unity{
 
             }).catch(onError);
         }
+
+        this.ports.commands.data.forEach(o => {
+            this.session.graph.addPort(this, o.function, {
+                input: {type: o.type},
+                output: {type: null},
+                onUpdate: (user) => {
+                    // userData.forEach((u,i) => {
+                        let data = user.data
+                        console.log(data)
+                        if (this.props.instance) this.props.instance.SendMessage(o.object, o.function, data);
+                    // })
+                }
+            })
+        })
         
     }
 

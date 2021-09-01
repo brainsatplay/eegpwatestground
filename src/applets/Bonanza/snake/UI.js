@@ -7,7 +7,6 @@ class UI{
         // Generic Plugin Attributes
         this.label = label
         this.session = session
-        this.params = {}
 
         // UI Identifier
         this.props = {
@@ -15,24 +14,54 @@ class UI{
             snake: [],
             dx: 0,
             dy: 0,
-            speed: 10
+            speed: 10,
+            size: 10
         }
 
         // Port Definition
         this.ports = {
             up: {
-                output: {type: null}
+                output: {type: null},
+                onUpdate: (user) => {
+                    if (user.data === true){
+                        this.props.dy = -this.props.speed
+                        this.props.dx = 0
+                    }
+                    return user
+                }
             },
             down: {
-                output: {type: null}
+                output: {type: null},
+                onUpdate: (user) => {
+                    if (user.data === true){
+                        this.props.dy = this.props.speed
+                        this.props.dx = 0
+                    }
+                    return user
+                }
             },
             left: {
-                output: {type: null}
+                output: {type: null},
+                onUpdate: (user) => {
+                    if (user.data === true){
+                        this.props.dx = -this.props.speed
+                        this.props.dy = 0
+                    }
+                return user
+            }
             },
             right: {
-                output: {type: null}
+                output: {type: null},
+                onUpdate: (user) => {
+                    if (user.data === true){
+                        this.props.dx = this.props.speed
+                        this.props.dy = 0
+                    }
+                    return user
+                }
             }
         }
+    
     }
 
     init = () => {
@@ -55,21 +84,17 @@ let squareLength = Math.min(container.offsetHeight*.8, container.offsetWidth*.8)
 canvas.width = squareLength
 canvas.height = squareLength
 
-this.props.snake = [{
-    x: Math.floor(canvas.width*Math.random()/10)*10, 
-    y:Math.floor(canvas.height*Math.random() /10)*10    
-}]
-let initialGoal = {
-    x: Math.floor(canvas.width*Math.random()/10)*10, 
-    y:Math.floor(canvas.height*Math.random() /10)*10
-}
+
+let getPosition = () => {return {x: Math.floor((canvas.width-this.props.size)*Math.random()/this.props.speed)*this.props.speed, y:Math.floor((canvas.height-this.props.size)*Math.random() /this.props.speed)*this.props.speed}}
+this.props.snake = [getPosition()]
+let initialGoal = getPosition()
 let currentGoal = initialGoal;
 
 const drawSnake = (segment) => {
     context.fillStyle = 'lightblue'
     context.strokeStyle = 'darkblue'
-    context.fillRect(segment.x, segment.y, 10,10)
-    context.strokeRect(segment.x, segment.y, 10,10)
+    context.fillRect(segment.x, segment.y, this.props.size,this.props.size)
+    context.strokeRect(segment.x, segment.y, this.props.size,this.props.size)
 }
 
 const clearCanas = () => {
@@ -82,8 +107,8 @@ const clearCanas = () => {
 const drawSnack = (pos) => {
     context.fillStyle = 'red'
     context.strokeStyle = 'darkred'
-    context.fillRect(pos.x, pos.y, 10,10)
-    context.strokeRect(pos.x, pos.y, 10,10)    
+    context.fillRect(pos.x, pos.y, this.props.size,this.props.size)
+    context.strokeRect(pos.x, pos.y, this.props.size,this.props.size) 
 }
 
 const moveSnake = () => {
@@ -96,7 +121,7 @@ const moveSnake = () => {
 }
 
             const main =  () => {
-            setTimeout(() => {
+           
                 clearCanas()
                 drawSnack({x: currentGoal.x,y:currentGoal.y})
                 this.props.snake.forEach(drawSnake);
@@ -106,26 +131,26 @@ const moveSnake = () => {
                         x: currentGoal.x,
                         y: currentGoal.y
                     })
-                    currentGoal = {x: Math.floor(canvas.width*Math.random()/this.props.speed)*this.props.speed, y:Math.floor(canvas.height*Math.random() /this.props.speed)*this.props.speed}
+                    currentGoal = getPosition()
                     clearCanas()
                     drawSnack({x: currentGoal.x,y:currentGoal.y})
                     this.props.snake.forEach(drawSnake);
                     moveSnake()
                 }
-                if(this.props.snake[0].x >= canvas.width){
-                    this.props.snake[0].x = 0;
-                }
-                if(this.props.snake[0].x < 0){
-                    this.props.snake[0].x = canvas.width;
-                }
-                if(this.props.snake[0].y >= canvas.height){
-                    this.props.snake[0].y = 0;
-                }
-                if(this.props.snake[0].y < 0){
-                    this.props.snake[0].y = canvas.height;
-                }
-                main()
-                },500)
+
+                // Correct Snake Position
+                if(this.props.snake[0].x >= canvas.width) this.props.snake[0].x = 0;
+                if(this.props.snake[0].x < 0)this.props.snake[0].x = canvas.width;
+                if(this.props.snake[0].y >= canvas.height)this.props.snake[0].y = 0;
+                if(this.props.snake[0].y < 0) this.props.snake[0].y = canvas.height;
+                
+                // Correct Snack Position
+                if(currentGoal.x >= canvas.width) currentGoal.x = 0;
+                if(currentGoal.x < 0) currentGoal.x = canvas.width;
+                if(currentGoal.y >= canvas.height) currentGoal.y = 0;
+                if(currentGoal.y < 0) currentGoal.y = canvas.height;
+                                
+                setTimeout(() => {main()},500)
             }
 
             main()
@@ -141,48 +166,6 @@ const moveSnake = () => {
         canvas.width = squareLength
         canvas.height = squareLength
     }
-
-    up = (userData) => {
-        userData.forEach(u => {
-            if (u.data === true){
-                this.props.dy = -this.props.speed
-                this.props.dx = 0
-            }
-        })
-        return userData
-    }
-
-    down = (userData) => {
-        userData.forEach(u => {
-            if (u.data === true){
-                this.props.dy = this.props.speed
-                this.props.dx = 0
-            }
-
-        })
-        return userData
-    }
-
-    left = (userData) => {
-        userData.forEach(u => {
-            if (u.data === true){
-                this.props.dx = -this.props.speed
-                this.props.dy = 0
-            }
-        })
-        return userData
-    }
-
-    right = (userData) => {
-        userData.forEach(u => {
-            if (u.data === true){
-                this.props.dx = this.props.speed
-                this.props.dy = 0
-            }
-        })
-        return userData
-    }
-    
 
     deinit = () => {
         

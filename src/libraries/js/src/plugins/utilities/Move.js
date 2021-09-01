@@ -2,40 +2,72 @@ export class Move{
     
     static id = String(Math.floor(Math.random()*1000000))
 
-    constructor(label, session, params={}) {
+    constructor(label, session) {
         this.label = label
         this.session = session
-        this.params = params
-        this.paramOptions = {
-            speed: {default: 1, min: 0, max: 10, step: 0.01},
-        }
 
         this.ports = {
             up: {
                 input: {type: 'boolean'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    if (user) this._getDecision(user, 'up')
+                    if (this.props['up']) this._move(0,-this.ports.speed.data)
+                }
             },
             down: {
                 input: {type: 'boolean'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    if (user) this._getDecision(user, 'down')
+                    if (this.props['down']) this._move(0,this.ports.speed.data)
+                }
             },
             left: {
                 input: {type: 'boolean'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    if (user) this._getDecision(user, 'left')
+                    if (this.props['left']) this._move(-this.ports.speed.data,0)
+                    return user
+                }
             },
             right: {
                 input: {type: 'boolean'},
                 output: {type: null},
+                onUpdate: (user) => {
+                    if (user) this._getDecision(user, 'right')
+                    if (this.props['right']) this._move(this.ports.speed.data,0)
+                    return user
+                }
             },
             // x: {},
             // y: {},
             dx: {
                 input: {type: 'number'},
                 output: {type: 'number'},
+                onUpdate: (user) => {
+                    let mean = this._getMean(user)
+            
+                    this.props.dx = mean
+                    return user
+                }
             },
             dy: {
                 input: {type: 'number'},
                 output: {type: 'number'},
+                onUpdate: (user) => {
+                    let mean = this._getMean(user)
+                    this.props.dy = mean
+                    return user
+                }
+            },
+            speed: {
+                data: 1, 
+                min: 0, 
+                max: 10, 
+                step: 0.01,
+                input: {type: 'number'},
             },
         }
 
@@ -56,10 +88,10 @@ export class Move{
         this.props.looping = true
         let animate = () => {
             if (this.props.looping){
-                if (this.props.right) this.session.atlas.graph.runSafe(this,'right',[{data: true}])
-                if (this.props.left) this.session.atlas.graph.runSafe(this,'left',[{data: true}])
-                if (this.props.up) this.session.atlas.graph.runSafe(this,'up',[{data: true}])
-                if (this.props.down) this.session.atlas.graph.runSafe(this,'down',[{data: true}])
+                if (this.props.right) this.session.atlas.graph.runSafe(this,'right',{data: true})
+                if (this.props.left) this.session.atlas.graph.runSafe(this,'left',{data: true})
+                if (this.props.up) this.session.atlas.graph.runSafe(this,'up',{data: true})
+                if (this.props.down) this.session.atlas.graph.runSafe(this,'down',{data: true})
                 setTimeout(() => {animate()}, 1000/60)
             }
         }
@@ -71,50 +103,15 @@ export class Move{
         this.props.looping = false
     }
 
-    right = (userData) => {
-        if (userData) this._getDecision(userData, 'right')
-        if (this.props['right']) this._move(this.params.speed,0)
-        return userData
+    _getDecision(user, command){
+        let mean = this._getMean(user)
+        let decision = (mean >= 0.5)
+        if (command) this.props[command] = decision
+        return decision
     }
 
-    left = (userData) => {
-        if (userData) this._getDecision(userData, 'left')
-        if (this.props['left']) this._move(-this.params.speed,0)
-        return userData
-    }
-
-    up = (userData) => {
-        if (userData) this._getDecision(userData, 'up')
-        if (this.props['up']) this._move(0,-this.params.speed)
-    }
-
-    down = (userData) => {
-        if (userData) this._getDecision(userData, 'down')
-        if (this.props['down']) this._move(0,this.params.speed)
-    }
-
-    dx = (userData) => {
-        let mean = this._getMean(userData)
-
-        this.props.dx = mean
-        return userData
-    }
-
-    dy = (userData) => {
-        let mean = this._getMean(userData)
-        this.props.dy = mean
-        return userData
-    }
-
-    _getDecision(userData, command){
-        let mean = this._getMean(userData)
-        if (command) this.props[command] = (mean >= 0.5)
-        return (mean >= 0.5)
-    }
-
-    _getMean(userData){
-        let choices = userData.map(u => Number(u.data))
-        return this.session.atlas.mean(choices)
+    _getMean(user){
+        return Number(user.data)
     }
 
     _move(dx,dy){
@@ -122,10 +119,8 @@ export class Move{
         // let desiredY = this.props.y + dy
         // this.props.x = desiredX
         // this.props.y = desiredY
-        this.session.atlas.graph.runSafe(this,'dx',[{data: dx, forceUpdate: true}])
-        this.session.atlas.graph.runSafe(this,'dy',[{data: dy, forceUpdate: true}])
-        // this.session.atlas.graph.runSafe(this,'x',[{data: this.props.x}])
-        // this.session.atlas.graph.runSafe(this,'y',[{data: this.props.y}])
+        this.session.graph.runSafe(this,'dx',{data: dx, forceUpdate: true})
+        this.session.graph.runSafe(this,'dy',{data: dy, forceUpdate: true})
     }
 
     responsive = () => {

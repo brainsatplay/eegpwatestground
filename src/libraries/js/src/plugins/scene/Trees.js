@@ -9,7 +9,6 @@ class Trees{
         // Generic Plugin Attributes
         this.label = label
         this.session = session
-        this.params = {}
 
 
         // UI Identifier
@@ -30,15 +29,16 @@ class Trees{
                 input: {type: null},
                 output: {type: Object, name: 'Mesh'},
                 onUpdate: () => {
-                    return [{data: this.props.groups}]
+                    console.log('ADDING TREE')
+                    return {data: this.props.groups}
                 }
             },
             count: {
-                default: 1,
+                data: 1,
                 input: {type: 'number'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    this.params.count = userData[0].data
+                onUpdate: (user) => {
+                    this.ports.count.data = user.data
                 }
             },
         }
@@ -95,7 +95,7 @@ class Trees{
             return low2 + (high2 - low2) * (value - low1) / (high1 - low1);
         }
 
-        for (let n = 0; n < this.params.count; n++){
+        for (let n = 0; n < this.ports.count.data; n++){
 
             const initialSphereGeometry = new THREE.SphereGeometry(this.props.maxSize,this.props.segments,this.props.segments)
             const woodMaterial = new THREE.MeshToonMaterial({color: 0xBF784E})
@@ -179,8 +179,8 @@ class Trees{
             this.props.groups.push(group)
         }
 
-        this.ports.add.default = this.props.groups
-        this.session.graph.runSafe(this,'add',[{forceRun: true, forceUpdate: true}])
+        this.ports.add.data = this.props.groups
+        this.session.graph.runSafe(this,'add',{forceRun: true, forceUpdate: true})
     }
 
     deinit = () => {}

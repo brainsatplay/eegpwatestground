@@ -1,4 +1,4 @@
-class Test{
+class Results{
 
     static id = String(Math.floor(Math.random()*1000000))
 
@@ -7,11 +7,7 @@ class Test{
         // Generic Plugin Attributes
         this.label = label
         this.session = session
-        this.params = params
-
-        this.paramOptions = {
-            speed: {default: 3, min: 0, max:10, step: 0.01}
-        }
+        
 
         // UI Identifier
         this.props = {
@@ -59,7 +55,7 @@ class Test{
             let animate = () => {
 
                 // Update Variables
-                this.props.pointer.x += this.params.speed * this.props.direction
+                this.props.pointer.x += this.ports.speed.data * this.props.direction
                 let leftEdge = this.props.canvas.width - this.props.size.x
                 if (this.props.pointer.x > leftEdge){
                     this.props.pointer.x = leftEdge
@@ -91,11 +87,11 @@ class Test{
         this.props.target.y = this.props.target.relY * (this.props.canvas.height - this.props.size.y)
     }
 
-    show = (userData) => {
-        let show = userData[0].data
+    show = (user) => {
+        let show = user.data
         if (show) this.props.container.style.display = 'flex'
         this.responsive()
-        return [{data: true, meta: {label: `${this.label}_show`, params: {mode: 'Manual', trialProgression: null, trialTypes: ['Blink Left', 'Blink Right', 'Blink Both']}}}]
+        return {data: true, meta: {label: `${this.label}_show`, params: {mode: 'Manual', trialProgression: null, trialTypes: ['Blink Left', 'Blink Right', 'Blink Both']}}}
     }
 
     _updateTargetPosition = () => {
@@ -124,11 +120,11 @@ class Test{
         this.props.context.strokeRect(0,0, this.props.canvas.width,this.props.canvas.height)
     }
 
-    default = (userData) => {
-        return userData
+    default = (user) => {
+        return user
     }
 
-    click = (userData) => {
+    click = (user) => {
 
         // let choice
         // let choices = userData.map(u => u.data)
@@ -146,27 +142,23 @@ class Test{
 
         // Only Push Forward on Click = True
 
-        userData = userData.filter(u => u.data === true)
-
-        if (userData.length > 0){
+        if (user.data === true){
             this._updateTargetPosition()
-            this.session.atlas.graph.runSafe(this,'performance',userData)
+            this.session.atlas.graph.runSafe(this,'performance',user)
         }
 
-        return userData
+        return user
     }
 
-    performance = (userData) => {
-        return userData.filter(u => {
-            if (u.data === true){
-                u.data = Math.abs(this.props.pointer.x - this.props.target.x)
-                u.meta.label = `${this.label}_distance`
-                return true
-            }
-        })
+    performance = (user) => {
+        if (user.data === true){
+            user.data = Math.abs(this.props.pointer.x - this.props.target.x)
+            user.meta.label = `${this.label}_distance`
+            return user
+        }
     }
 
     deinit = () => {}
 }
 
-export {Test}
+export {Results}

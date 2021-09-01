@@ -7,7 +7,7 @@ export class Spectrogram{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),
@@ -23,18 +23,17 @@ export class Spectrogram{
                 edit: false,
                 input: {type: Array},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    let u = userData[0]
-                    this.props.helper.latestData = u.data
+                onUpdate: (user) => {
+                    this.props.helper.latestData = user.data
                     this.props.helper.draw();
                 }
             },
             element: {
-                default: this.props.canvas,
+                data: this.props.canvas,
                 input: {type: null},
                 output: {type: Element},
                 onUpdate: () => {
-                    return [{data: this.props.canvas}]
+                    return {data: this.props.canvas}
                 }
             }
         }

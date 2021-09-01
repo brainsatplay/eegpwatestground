@@ -5,31 +5,29 @@ export class Index{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.ports = {
             default: {
                 edit: false,
                 input: {type: Array},
                 output: {type: undefined},
-                onUpdate: (userData) => {
-                    let u = userData[0]
+                onUpdate: (user) => {
                     let idx;
-                    if (u.data){
-                        if (this.params.method == 'first') idx = 0
-                        if (this.params.method == 'last') idx = u.data.length - 1
-                        return [{data: u.data[idx]}]
+                    if (user.data){
+                        if (this.ports.method.data == 'first') idx = 0
+                        if (this.ports.method.data == 'last') idx = user.data.length - 1
+                        return {data: user.data[idx]}
                     }
                 }
             },
             method: {
-                default: 'first',
+                data: 'first',
                 input: {type: 'string'},
                 output: {type: null},
                 options: ['first','last'],
-                onUpdate: (userData) => {
-                    let u = userData[0]
-                    if (this.ports.method.options.includes(u.data)) this.params.method = u.data
+                onUpdate: (user) => {
+                    if (this.ports.method.options.includes(user.data)) this.ports.method.data = user.data
                 }
             }
         }

@@ -119,17 +119,6 @@ button {
     text-transform: uppercase;
 }
 
-.loader .loading-animation {
-    border: 16px solid #f3f3f3; /* Light grey */
-    border-top: 16px solid #3498db; /* Blue */
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    margin:auto;
-    animation: spin 2s linear infinite;
-    text-align: center;
-  }
-  
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
@@ -140,9 +129,9 @@ button {
     display:flex;
     position: absolute;
     top: 0px;
-    left:75px;
+    left:0px;
     flex-direction: column; 
-    width: calc(100vw - 75px)
+    width: calc(100vw - 0px)
 }
 
 /* Sidebar */
@@ -162,15 +151,39 @@ button {
     /* border-right: 1px solid rgb(200, 200, 200); */
     z-index: 10;
     box-shadow: 0px 3px 15px rgba(0,0,0,0.2);
+    transform: translateX(-100%)
 }
 
 
-#sidebar:hover {
-    width: 75px;
+/* #sidebar:hover {
+    transform: translateX(0%)
+} */
+
+#sidebar-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(calc(100% + 25px), 20px);
+    /* background: white; */
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
 }
 
-#sidebar-container:hover .overlay{
+#sidebar-toggle div {
+  width: 25px;
+  height: 2px;
+  background-color: white;
+  margin: 3px 0;
+}
+
+#sidebar-container.toggled #sidebar {
+    transform: translateX(0%)
+}
+
+#sidebar-container.toggled .overlay{
     opacity: 50%;
+    pointer-events: all;
 }
 
 #sidebar-container .overlay{
@@ -182,6 +195,8 @@ button {
     transition: opacity 0.5s;
     pointer-events: none;
     z-index: 8;
+    top: 0;
+    left: 0;
 }
 
 #sidebar-inner {
@@ -201,32 +216,32 @@ button {
     flex-grow: 1;
     width: 100%;
     position: relative;
-    padding: 5px;
-    margin: 5px 0px;
-    border-radius: 5px;
+    /* margin: 5px 0px; */
+    /* border-radius: 5px; */
     font-size: 80%;
     background: transparent;
     color: white;
-    border: 1px solid rgb(200, 200, 200);
+    border: none;
+    /* border: 1px solid rgb(200, 200, 200); */
     text-align: left;
     transition: 0.5s;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: flex-start;
+    padding: 0px 20px;
 }
 
 #sidebar button:hover {
-    background-color: rgb(35,35,35);
+    background-color: rgb(50,50,50);
 }
 
 #sidebar button .img-cont span {
     visibility: hidden;
-    width: calc(200px - 50px - 75px);
+    width: calc(200px - 100px);
     /* width: calc(10px); */
     text-align: left;
     padding: 5px 0;
-    border-radius: 5px;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -246,20 +261,21 @@ button {
     width: 40px;
     max-width: 50px;
     padding: 10px;
+    margin-right: 10px;
 }
 
 /* #sidebar button:focus {
     outline: none;
 } */
 
-#sidebar-toggle{
+/* #sidebar-toggle{
     position:absolute;
     z-index: 10;
     top: 0px;
     width: 75px;
     height:100vh;
     pointer-events: none;
-}
+} */
 
 /* Style the button that is used to open and close the collapsible content */
 .collapsible-container { 
@@ -285,7 +301,7 @@ button {
 #sidebar .collapsible-container{
     width: 100%;
     box-sizing: border-box; 
-    padding: 0px 20px;
+    /* padding: 0px 20px; */
 }
   
   /* Style the collapsible content. Note: hidden by default */
@@ -293,7 +309,7 @@ button {
     position: absolute;
     padding: 0px 25px 25px 25px;
     /* min-width: 100vw; */
-    width: calc(100vw - 75px);
+    width: calc(100vw - 0px);
     box-sizing: border-box;
     top: 0; 
     right: 0;
@@ -316,11 +332,10 @@ button {
     /* transform:translateX(12.3%); */
     /* border-bottom: 1px solid rgb(200, 200, 200); */
     margin-bottom: 5px;
-    border: 1px solid rgb(15,15,15);
+    border-bottom: 1px solid rgb(120,120,120);
     border-radius:5px;
     height:70px;
-    width:80%;
-    transform:translateX(12.2%);
+    width:100%;
     display: flex;
     justify-content: center;
     align-items:  center;
@@ -328,9 +343,7 @@ button {
 }
 
 .logo-container:hover{
-    border: 1px solid white;
-    /* border-radius: 5px; */
-    background-color: rgb(20,20,20);
+    background-color: rgb(50,50,50);
 }
 
 .logo {
@@ -477,10 +490,10 @@ input:focus{
 @media (min-device-width: 1000px) {
 
     /* Sidebar Reveal */
-    #sidebar:hover {
+    #sidebar {
         width: clamp(75px, 200px, 40vw);
     }
-    #sidebar:hover button .img-cont span{
+    #sidebar button .img-cont span{
         visibility: visible;
         opacity: 1;
     }

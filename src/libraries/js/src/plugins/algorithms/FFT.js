@@ -5,13 +5,31 @@ export class FFT{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.ports = {
             default: {
                 edit: false,
                 input: {type: Array},
                 output: {type: Array},
+                onUpdate: (user) => {
+                    let arr =user.data
+            
+                    // Pass to Worker
+                    if (u.meta.label != this.label){
+                        if (Array.isArray(arr)){
+                            this._analysisFunction(arr)
+                            user.meta.label = this.label
+                        }else {
+                            console.log('invalid type')
+                        }
+                    } 
+                    
+                    // Pass from Worker
+                    else {
+                        return user
+                    }
+                }
             }
         }
 
@@ -29,27 +47,6 @@ export class FFT{
 
     deinit = () => {}
 
-    default = (userData) => {
-        let u = userData[0]
-        let arr = userData[0].data
-
-        // Pass to Worker
-        if (u.meta.label != this.label){
-            if (Array.isArray(arr)){
-                this._analysisFunction(arr)
-                u.meta.label = this.label
-            }else {
-                console.log('invalid type')
-            }
-        } 
-        
-        // Pass from Worker
-        else {
-            userData = [u]
-            return userData
-        }
-    }
-
     _analysisFunction = (arr) => {
         if(this.props.waiting === false){
             window.workers.postToWorker({foo:'multidftbandpass', input:[[arr], 1, 0, 128, 1], origin:this.label}, this.props.id);
@@ -60,6 +57,6 @@ export class FFT{
 
     _workerOnMessage = (res) => {
         this.waiting = false
-        this.session.graph.runSafe(this,'default', [{data:res.output[1][0], meta: {label: this.label}}])
+        this.session.graph.runSafe(this,'default', {data:res.output[1][0], meta: {label: this.label}})
     }
 }

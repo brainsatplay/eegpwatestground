@@ -5,7 +5,7 @@ export class Canvas{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),
             canvas: null,
@@ -27,19 +27,17 @@ export class Canvas{
             draw: {
                 input: {type: Object},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    userData.forEach(u => {
-                        if (u.data.function instanceof Function) this.props.drawObjects.push(u.data)
-                    })
+                onUpdate: (user) => {
+                    if (user.data.function instanceof Function) this.props.drawObjects.push(user.data)
                 }
             },
             element: {
-                default: this.props.container,
+                data: this.props.container,
                 input: {type: null},
                 output: {type: Element},
                 onUpdate: () => {
-                    this.params.element = this.props.container
-                    return [{data: this.params.element}]
+                    this.ports.element.data = this.props.container
+                    return {data: this.ports.element.data}
                 }
             }
         }
@@ -50,7 +48,7 @@ export class Canvas{
         this.props.context = this.props.canvas.getContext("2d");
 
         // Set Default Port Output
-        this.ports.element.default = this.props.container
+        this.ports.element.data = this.props.container
 
         // Set Looping
         this.props.looping = true

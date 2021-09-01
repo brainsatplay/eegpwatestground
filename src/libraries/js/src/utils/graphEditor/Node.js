@@ -4,6 +4,7 @@ export class Node {
         this.graph = graph
         this.nodeInfo = nodeInfo
         this.parentNode = this.graph.parentNode ?? document.body
+        this.latencyDisplays = {}
         this.element = this.createElement(this.nodeInfo)
 
         // Set Transform based on Settings
@@ -107,7 +108,12 @@ export class Node {
                         <span>${port}</span>
                     </div>
                 `
+                this.latencyDisplays[port] = document.createElement('div')
+                this.latencyDisplays[port].setAttribute('name', port)
+                this.latencyDisplays[port].classList.add('latency-display')
+                this.portLabels.querySelector(`[name="${port}"]`).insertAdjacentElement('afterend', this.latencyDisplays[port])    
             }
+
             portWrapper.insertAdjacentElement('beforeend', portElement)
             this[`${inorout}Ports`].insertAdjacentElement('beforeend', portWrapper)
         })
@@ -151,10 +157,6 @@ export class Node {
             <h3>${node.constructor.name}</h3>
             <p>${node.label}<p>
         `
-
-        this.latencyDisplay = document.createElement('div')
-        this.latencyDisplay.classList.add('latency-display')
-        nodeText.insertAdjacentElement('beforeend', this.latencyDisplay)
 
         element.insertAdjacentElement('beforeend', nodeText)
 

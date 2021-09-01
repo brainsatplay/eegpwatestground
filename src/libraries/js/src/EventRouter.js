@@ -14,6 +14,7 @@ export class EventRouter{
             }
         }
         this.apps = {}
+        this.ui = []
 
         this.props = {
             id: String(Math.floor(Math.random()*1000000)),
@@ -79,16 +80,15 @@ export class EventRouter{
                         
                         this.state.addToState(state.meta.id, state)
                         this.routes.registry[state.meta.id] = [state, {}]
-
                         // Route Switches in Atlas by Default
                         if (!(splitId[0] in this.device.atlas.data.states)) this.device.atlas.data.states[splitId[0]] = {}
                         if (splitId.length > 1) splitId.push('default')
-                        if (!(splitId[1] in this.device.atlas.data.states[splitId[0]])) this.device.atlas.data.states[splitId[0]][splitId[1]] = [state]
-                        else this.device.atlas.data.states[splitId[0]][splitId[1]].push([state])
+                        if (!(splitId[1] in this.device.atlas.data.states[splitId[0]])) this.device.atlas.data.states[splitId[0]][splitId[1]] = state
+                        else this.device.atlas.data.states[splitId[0]][splitId[1]].push(state)
+
 
                         // Declare Callback and Subscribe
                         let deviceCallback = (o) => {
-                            console.log(o)
                             this.update(o, this.routes.registry[state.meta.id])
                         }
 
@@ -101,7 +101,7 @@ export class EventRouter{
 
     deinit = () => {
         this.state.removeState(this.props.deviceSub)
-        if (this.ui) this.ui.deleteNode()
+        if (this.ui) this.ui.forEach(frag => frag.deleteNode())
     }
 
     // Route Events to Atlas
@@ -113,16 +113,12 @@ export class EventRouter{
         targets.forEach(t => {
             if (t){
                 if (t.constructor == Object && 'manager' in t){
-                    t.target.state[t.target.port] = []
-                    t.target.state[t.target.port] = [{data: newState, meta: {label: t.label}}]
+                    Object.assign(t.target.state[t.target.port], {data: newState, meta: {label: t.label}})
                     let updateObj = {}
                     updateObj[t.label] = {}
                     updateObj[t.label].trigger = true
                     updateObj[t.label].value = t.target.state[t.target.port]
                     t.manager.setSequentialState(updateObj)
-                }
-                else if (Array.isArray(t) && 'data' in t[0]){
-                    t[0].data = newState
                 }
             }
         })
@@ -240,6 +236,7 @@ export class EventRouter{
                 oldSources.delete(c)
             })
             this.removeMatchingRoutes(oldSources)
+
             // this.routes.reserve.apps[id].count++
         }
 
@@ -269,12 +266,54 @@ export class EventRouter{
                 this.updateRouteDisplay()
             }
 
-            this.ui = new DOMFragment(
+            this.ui.push(new DOMFragment(
                 template,
                 parentNode,
                 undefined,
                 setup
-            )
+            ))
+        }
+    }
+
+    addDebugger = (parentNode=document.body) => {
+        
+        if (Object.keys(this.device.states).length > 0){
+            let template = () => {
+                return `
+                <br>
+                <div id='${this.id}debugger' style="padding: 10px;">
+                    <h4>Debugger</h4>
+                    <hr>
+                    <div class='brainsatplay-debugger' style="display: flex; flex-wrap: wrap;">
+                    </div>
+                </div>
+                `;
+            }
+
+            let setup = () => {
+
+                let container = parentNode.querySelector('.brainsatplay-debugger')
+                let blink = this.device.atlas.graph.getNode(this.device.atlas.props.id, 'blink')
+
+                if (blink){
+
+                    if (parentNode === document.body) {
+                        blink.props.container.style.position = 'absolute'
+                        blink.props.container.style.top = 0
+                        blink.props.container.style.right = 0
+                    }
+                    this.device.atlas.graph.updateParams(blink, {debug: true})
+                    container.insertAdjacentElement('beforeend', blink.props.container)
+                }
+
+            }
+
+            this.ui.push(new DOMFragment(
+                template,
+                parentNode,
+                undefined,
+                setup
+            ))
         }
     }
 

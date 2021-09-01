@@ -5,7 +5,7 @@ export class Websocket{
     constructor(label, session, params={}) {
         this.label = label
         this.session = session
-        this.params = params
+        
 
         this.props = {
             socket: null,
@@ -17,12 +17,11 @@ export class Websocket{
                 default: this.session.info.auth.url.href,
                 input: {type: 'string'},
                 output: {type: null},
-                onUpdate: (userData) => {
-                    let u = userData[0]
-                    let valid = this.validURL(u.data)
+                onUpdate: (user) => {
+                    let valid = this.validURL(user.data)
                     if (valid){
-                        this.params.url = u.data
-                        this.session.graph.runSafe(this,'connected', [{data: true, forceUpdate: true}])
+                        this.ports.url.data = user.data
+                        this.session.graph.runSafe(this,'connected', {data: true, forceUpdate: true})
                     }
                 }
             }, 
@@ -30,20 +29,20 @@ export class Websocket{
                 default: false,
                 input: {type: 'boolean'},
                 output: {type: 'boolean'},
-                onUpdate: (userData) => {
+                onUpdate: (user) => {
                     return new Promise(resolve => {
-                        let choice = userData[0].data
+                        let choice = uuser.data
                         if (choice){
-                            let url = new URL(this.params.url)
+                            let url = new URL(this.ports.url.data)
                             if (this.props.socket == null || this.props.socket.url.split('://')[1] != url.href.split('://')[1]){
                                 this._createWebsocket(url, () => {
-                                    resolve([{data: true}])
+                                    resolve({data: true})
                                 })                             
                             }
                 
                         } else {
                             this._closeSocket()
-                            resolve([{data: false}])
+                            resolve({data: false})
                         }
                     })
                 }
@@ -51,17 +50,16 @@ export class Websocket{
             message: {
                 input: {type: null},
                 output: {type: undefined},
-                onUpdate: (userData) => {
-                    return userData
+                onUpdate: (user) => {
+                    return user
                 }
             },
             send: {
                 input: {type: undefined},
                 output: {type: null},
-                onUpdate: (userData) => {
+                onUpdate: (user) => {
                     if (this.props.socket != null){
-                        this.props.socket.send(JSON.stringify(userData[0].data))
-
+                        this.props.socket.send(JSON.stringify(user.data))
                     }
                 }
             },
@@ -69,7 +67,7 @@ export class Websocket{
     }
 
     init = () => {
-        this.session.graph.runSafe(this, 'connected', [{data: true, forceUpdate: true}])
+        this.session.graph.runSafe(this, 'connected', {data: true, forceUpdate: true})
     }
 
     deinit = () => {
@@ -97,19 +95,19 @@ export class Websocket{
         socket.onopen = () => {
             console.log('WebSocket opened')
             this.props.socket = socket
-            this.params.connected = true
+            this.ports.connected.data = true
             connectCallback()
         };
 
         socket.onmessage = (msg) => {
             console.log('Message recieved', msg.data)
-            this.session.graph.runSafe(this,'message', [{data: msg.data, forceUpdate: true}])
+            this.session.graph.runSafe(this,'message', {data: msg.data, forceUpdate: true})
         }
 
         socket.onclose = (msg) => {
             console.log('WebSocket closed')
             this.props.socket = null
-            this.params.connected = false
+            this.ports.connected.data = false
         }
     }
 

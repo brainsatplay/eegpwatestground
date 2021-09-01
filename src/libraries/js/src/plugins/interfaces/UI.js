@@ -4,10 +4,9 @@ export class UI{
 
     static id = String(Math.floor(Math.random()*1000000))
     
-    constructor(label, session, params={}) {
+    constructor(label, session) {
         this.label = label
         this.session = session
-        this.params = params
         this.props = {
             id: String(Math.floor(Math.random() * 1000000)),
             canvas: null,
@@ -24,32 +23,35 @@ export class UI{
             element: {
                 input: {type: null},
                 output: {type: Element},
-                default: document.createElement('div'),
+                data: document.createElement('div'),
                 onUpdate: () => {
-                    return [{data: this.props.container}]
+                    return {data: this.props.container}
                 },
             },
              opacity: {
                 input: {type:'number'},
                 output: {type: null},
-                default: 1,
+                data: 1,
                 min: 0,
                 max: 1,
                 step: 0.01,
-                onUpdate:(userData) => {
-                    let val = userData[0].data
+                onUpdate:(user) => {
+                    let val = user.data
                     this.props.container.style.opacity = val
                 }
              },
+             containerStyle: {},
+             setupHTML: {},
+             parentNode: {},
         }
 
         // Dynamically Add Ports
         let ports = [
-            {key: 'html', input: {type: 'HTML'}, output: {type: null}, default: `<div id='content'></div>`, onUpdate: (userData) => {
+            {key: 'html', input: {type: 'HTML'}, output: {type: null}, data: `<div id='content'></div>`, onUpdate: (user) => {
                 
                 let newContainer = document.createElement('div')
 
-                newContainer.insertAdjacentHTML('beforeend', userData[0].data)
+                newContainer.insertAdjacentHTML('beforeend', user.data)
 
                 let newEls = Array.from(newContainer.querySelectorAll("*"))
                 let oldEls = Array.from(this.props.container.querySelectorAll("*"))
@@ -121,11 +123,12 @@ export class UI{
                     // node.innerHTML.trim() === ''
                     if (node.id && noDescendentWithID){ // Create ports for blank elements with IDs
                         removedIds.delete(node.id) // Actually still there
+
                         this.session.graph.addPort(this,node.id, {
                             input: {type: undefined},
                             output: {type: null},
-                            onUpdate: (userData) => {
-                                let data = userData[0].data
+                            onUpdate: (user) => {
+                                let data = user.data
                                 if (data instanceof Function) data = data()
 
                                 node.innerHTML = ''
@@ -148,8 +151,8 @@ export class UI{
                         })
 
                         // Fill Width/Height by Default
-                        if (!this.params.style.includes(`#${node.id}`)) {
-                            this.session.graph.runSafe(this, 'style', [{data: this.params.style + `\n\n#${node.id} {\n\twidth: 100%;\n\theight: 100%;\n}`}])
+                        if (!this.ports.style.data.includes(`#${node.id}`)) {
+                            this.session.graph.runSafe(this, 'style', {data: this.ports.style.data + `\n\n#${node.id} {\n\twidth: 100%;\n\theight: 100%;\n}`})
                         }
 
                     }
@@ -161,7 +164,7 @@ export class UI{
                 })
             }}, 
             // {key: 'parentNode', input: {type: Element}, output: {type: null}, default: document.body}, 
-            {key: 'style', input: {type: 'CSS'}, output: {type: null}, default: `.brainsatplay-ui-container {\n\twidth: 100%;\n\theight: 100%;\n}`, onUpdate: (userData) => {
+            {key: 'style', input: {type: 'CSS'}, output: {type: null}, data: `.brainsatplay-ui-container {\n\twidth: 100%;\n\theight: 100%;\n}`, onUpdate: (user) => {
                 
                 if (this.app.AppletHTML){ // Wait for HTML to Exist
                     if (this.props.style == null){
@@ -172,22 +175,24 @@ export class UI{
                     }
 
                     // Scope the CSS (add ID scope)
-                    let styleArray = userData[0].data.split(/[{}]/).filter(String).map(function(str){
-                        return str.trim(); 
-                    });
+                    if (user.data){
+                        let styleArray = user.data.split(/[{}]/).filter(String).map(function(str){
+                            return str.trim(); 
+                        });
 
-                    let newStyle = ``
-                    for (let i = 0; i < styleArray.length - 1; i+=2){
-                        if (styleArray[i].includes('.brainsatplay-ui-container')) newStyle += `[id='${this.props.id}']` // styleArray[i+1]
-                        else newStyle += `[id='${this.props.id}'] ${styleArray[i]} `
-                        newStyle +=`{\n\t${styleArray[i+1]}\n}\n\n`
+                        let newStyle = ``
+                        for (let i = 0; i < styleArray.length - 1; i+=2){
+                            if (styleArray[i].includes('.brainsatplay-ui-container')) newStyle += `[id='${this.props.id}']` // styleArray[i+1]
+                            else newStyle += `[id='${this.props.id}'] ${styleArray[i]} `
+                            newStyle +=`{\n\t${styleArray[i+1]}\n}\n\n`
+                        }
+
+                        this.props.style.innerHTML = newStyle
                     }
-
-                    this.props.style.innerHTML = newStyle
                 }
             }}, 
-            {key: 'deinit', input: {type: Function}, output: {type: null}, default: ()=>{}}, 
-            {key: 'responsive',input: {type: Function}, output: {type: null}, default: ()=>{}}
+            {key: 'deinit', input: {type: Function}, output: {type: null}, data: ()=>{}}, 
+            {key: 'responsive',input: {type: Function}, output: {type: null}, data: ()=>{}}
         ]
 
         ports.forEach(o => {
@@ -195,10 +200,10 @@ export class UI{
             this.ports[o.key] = {
                 input: o.input,
                 output: o.output,
-                default: o.default,
-                onUpdate: (userData) => {
-                    this.params[o.key] = userData[0].data
-                    o.onUpdate(userData)
+                data: o.data,
+                onUpdate: (user) => {
+                    if (o.onUpdate) o.onUpdate(user)
+                    return user
                 }
             }
             
@@ -212,18 +217,18 @@ export class UI{
         this.props.container = document.createElement('div')
         this.props.container.id = this.props.id
         this.props.container.classList.add('brainsatplay-ui-container')
-        this.props.container.style = this.params.containerStyle
-        this.session.graph.runSafe(this,'html', [{data: this.params.html}])
+        this.props.container.style = this.ports.containerStyle.data
+        this.session.graph.runSafe(this,'html', {data: this.ports.html.data})
 
         // Create Stylesheet
         let HTMLtemplate = this.props.container
 
         let setupHTML = () => {
-                if (this.params.setupHTML instanceof Function) this.params.setupHTML()
+                if (this.ports.setupHTML.data instanceof Function) this.ports.setupHTML.data()
 
                 // Wait to Reference AppletHTML
                 setTimeout(() => {
-                    this.session.graph.runSafe(this,'style', [{data: this.params.style}])
+                   if (this.ports.style.data) this.session.graph.runSafe(this,'style', {data: this.ports.style.data})
                 }, 250)
         }
 
@@ -231,12 +236,12 @@ export class UI{
     }
 
     deinit = () => { 
-        if (this.params.deinit instanceof Function) this.params.deinit()
+        if (this.ports.deinit.data instanceof Function) this.ports.deinit.data()
         this.props.style.remove()
     }
 
     responsive = () => {
-        if (this.params.responsive instanceof Function) this.params.responsive()
+        if (this.ports.responsive.data instanceof Function) this.ports.responsive.data()
        for (let key in this.props.onresize){
            this.props.onresize[key]()
        }

@@ -67,7 +67,7 @@ export class StateManager {
                     //Object.assign(this.prev,this.data);//Temp fix until the global state listener function works as expected
                     Object.assign(this.data,this.pushToState);
 
-                    //console.log("new state: ", this.data); console.log("props set: ", this.pushToState);
+                    // console.log("new state: ", this.data); console.log("props set: ", this.pushToState);
                     for (const prop of Object.getOwnPropertyNames(this.pushToState)) {
                         delete this.pushToState[prop];
                     }
@@ -82,8 +82,7 @@ export class StateManager {
                 this.interval
             );
 
-            this.addToState('pushRecord',this.pushRecord,(record)=>{
-
+            let clearRecord = (record) => {
                 let l = record.pushed.length;
                 for (let i = 0; i < l; i++){
                     let updateObj = record.pushed[i];
@@ -96,6 +95,11 @@ export class StateManager {
                     }
                 }
                 this.pushRecord.pushed.splice(0,l);
+                if (this.pushRecord.pushed.length != 0) clearRecord(this.pushRecord)
+            }
+
+            this.addToState('pushRecord',this.pushRecord,(record)=>{
+                clearRecord(record) // executes until fully cleared
             });
 
             this.data.pushCallbacks = this.pushCallbacks;
@@ -131,6 +135,7 @@ export class StateManager {
         }
 
         updateObj.stateUpdateTimeStamp = Date.now();
+
         this.pushRecord.pushed.push(JSON.parse(JSON.stringifyWithCircularRefs(updateObj)));
         
         if(appendArrs) {

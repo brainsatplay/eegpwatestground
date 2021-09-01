@@ -1,7 +1,9 @@
 import * as brainsatplay from '../../../libraries/js/brainsatplay'
 import {Unity} from './unityUtils/Unity'
 
-// import * as webbuild from './webbuild.loader'
+
+// MUST IMPORT ALL THE FILES FROM BUILD AND TEMPLATEDATA
+// import * as webbuild from './webbuild.loader' // Loader may be univeral
 
 export const settings = {
     name: "Unity Template",
@@ -24,7 +26,17 @@ export const settings = {
         {
           id:'unity', 
           class: Unity, 
-          // params:{webbuild}
+          params:{
+              commands: [{
+                object: 'System',
+                function: 'updateData',
+                type: 'number'
+              }, {
+                object: 'System',
+                function: 'updateBlink', // or just blink
+                type: 'boolean'
+              }]
+          }
         },
         {
           id:'ui', 
@@ -39,7 +51,7 @@ export const settings = {
         },
         {
           source: 'neurofeedback',
-          target: 'unity',
+          target: 'unity:updateData',
         },
         {
           source: 'unity:element',
